@@ -1,0 +1,6 @@
+.nyc_output/
+.remote/
+coverage/
+dist/
+dev/
+package.json

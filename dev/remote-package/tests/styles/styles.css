@@ -1,0 +1,17 @@
+@import 'slick-carousel/slick/slick-theme.css';
+
+@import './common';
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url(./open_sans_400_normal.woff2) format('woff2');
+  font-weight: 400;
+}
+
+.css {
+	background-color: orange;
+}
+
+.encoded-url {
+	background-image: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7);
+}
