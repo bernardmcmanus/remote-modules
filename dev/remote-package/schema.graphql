@@ -1,0 +1,8 @@
+type DummyType {
+  id: ID,
+  bool: Boolean
+}
+
+type Query {
+  dummy: DummyType
+}

@@ -1,0 +1,17 @@
+root: true
+parser: babel-eslint
+extends:
+  - airbnb-base
+  - airbnb-base/rules/strict
+  - prettier
+overrides:
+  - files: ['test/**/*.test.js']
+    env:
+      mocha: true
+rules:
+  no-underscore-dangle: [error, { allowAfterThis: true }]
+  no-restricted-syntax: [error, {
+    selector: LabeledStatement
+  }, {
+    selector: WithStatement
+  }]
