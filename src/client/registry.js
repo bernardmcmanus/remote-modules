@@ -1,0 +1,55 @@
+export default class Registry {
+	constructor(ttl = 3e5 /* 5m */) {
+		this.ttl = ttl;
+	}
+
+	expires = null;
+
+	cache = new Map();
+
+	links = new Map();
+
+	hasLink(key) {
+		return this.links.has(key);
+	}
+
+	ln(alias, key) {
+		this.links.set(alias, key);
+	}
+
+	lookup(key) {
+		const { links } = this;
+		return links.has(key) ? links.get(key) : key;
+	}
+
+	has(key) {
+		return this.cache.has(this.lookup(key));
+	}
+
+	get(key) {
+		return this.cache.get(this.lookup(key));
+	}
+
+	set(key, module) {
+		const { cache } = this;
+		const pid = this.lookup(key);
+		if (!cache.has(pid)) {
+			cache.set(pid, module);
+		}
+	}
+
+	sweep() {
+		if (!this.expires) {
+			this.expires = Date.now() + this.ttl;
+		}
+		if (this.expires <= Date.now()) {
+			this.clear();
+		}
+	}
+
+	clear() {
+		this.cache.clear();
+		this.links.clear();
+		this.expires = null;
+	}
+}
