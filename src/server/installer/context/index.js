@@ -3,7 +3,7 @@ import Url from 'url';
 import { inspect } from 'util';
 
 import { isCore, resolveSync } from '../../../lib/resolver';
-import { matches } from '../../../lib/helpers';
+import { isAbsolutePath, isAbsoluteURL, matches } from '../../../lib/helpers';
 import defineProperties from '../../../lib/helpers/defineProperties';
 import escapeRegExp from '../../../lib/helpers/escapeRegExp';
 import last from '../../../lib/helpers/last';
@@ -17,7 +17,7 @@ export function isInstalledPackage(slug, moduleDirs) {
 }
 
 export function getSlug(origin, relativeTo) {
-	return origin && Path.isAbsolute(origin) ? Path.relative(relativeTo, origin) : origin;
+	return origin && isAbsolutePath(origin) ? Path.relative(relativeTo, origin) : origin;
 }
 
 export function getModuleId(slug, moduleDirs) {
@@ -28,6 +28,9 @@ export function getModuleId(slug, moduleDirs) {
 }
 
 export function getPackageId(moduleId, moduleDirs) {
+	if (isAbsoluteURL(moduleId)) {
+		return null;
+	}
 	const packageSegment = moduleDirs.reduce(
 		(result, dir) => last(result.split(`${dir}/`)),
 		moduleId
@@ -54,7 +57,7 @@ export default function ContextFactory(options) {
 
 	const contextualResolve = memoize((request, baseDir) => {
 		let resolved;
-		if (typeof request === 'string' && !Path.isAbsolute(request)) {
+		if (typeof request === 'string' && !isAbsolutePath(request) && !isAbsoluteURL(request)) {
 			resolved = resolveSync(Url.parse(request).pathname, {
 				...C.pick(['core', 'extensions', 'mainFields', 'moduleDirs', 'rootDir']),
 				baseDir: typeof baseDir === 'string' ? baseDir : C.rootDir
@@ -67,10 +70,15 @@ export default function ContextFactory(options) {
 
 	const createContext = memoize((request, baseDir) => {
 		// eslint-disable-next-line no-use-before-define
-		const ctx = new SourceContext(request, baseDir, factory);
+		const ctx = new SourceContext(request, baseDir, factory, options);
 
+		let iterations = 0;
 		while (ctx.digest()) {
 			C.runMiddleware('context', [ctx]);
+			if (iterations > 1000) {
+				throw new Error(`Exceeded max middleware iterations for '${ctx.moduleId}'`);
+			}
+			iterations += 1;
 		}
 
 		if (C.strict && ctx.error) {

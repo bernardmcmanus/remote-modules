@@ -21,6 +21,7 @@ export default C =>
 								require.resolve('../../../transforms/unreferenced'),
 								{ logger, moduleId }
 							],
+							'@babel/plugin-transform-template-literals',
 							'@babel/plugin-transform-modules-commonjs'
 						].filter(Boolean)
 					});

@@ -91,7 +91,7 @@ export default class ConfigStore {
 					extensions: ['.js', '.mjs', '.es', '.es6', '.babel.js', '.json']
 				});
 				if (rcpath) {
-					result = ConfigStore.getModulerc(rcpath);
+					result = Object.assign(ConfigStore.getModulerc(rcpath), { rcpath });
 				}
 			} catch (err) {
 				if (err.code !== 'MODULE_NOT_FOUND') {

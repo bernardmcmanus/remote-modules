@@ -37,6 +37,7 @@ export default class Watcher extends FSWatcher {
 		});
 
 		this.reset();
+		this.setMaxListeners(100);
 
 		this.once('ready', () => {
 			this.ready = true;
@@ -91,24 +92,37 @@ export default class Watcher extends FSWatcher {
 		[resource, ...resource.getDeepDependencySet(r => r.isNormal())].forEach(r => {
 			scopePaths.add(r.origin);
 		});
+		if (resource.options.rcpath) {
+			scopePaths.add(resource.options.rcpath);
+		}
 	}
 
-	subscribe(mainResource, fn) {
+	subscribe(resourceFactory, fn) {
 		const wrappedFn = async events => {
-			const pickedEvents = events.reduce((acc, [type, path]) => {
-				// unwatch deleted resources
-				if (type === 'unlink') {
-					this.unwatch(path);
+			let mainResource = resourceFactory();
+			const pickedEvents = [];
+			for (const [type, path] of events) {
+				if (path === mainResource.options.rcpath) {
+					// eslint-disable-next-line no-await-in-loop
+					await resourceFactory.reset();
+					resourceFactory.uncache();
+					mainResource = resourceFactory();
+					pickedEvents.push([type, mainResource]);
+				} else {
+					// unwatch deleted resources
+					if (type === 'unlink') {
+						this.unwatch(path);
+					}
+					const resource = resourceFactory(path);
+					if (resource && (resource.sameAs(mainResource) || resource.dependencyOf(mainResource))) {
+						pickedEvents.push([type, resource]);
+					}
 				}
-				const resource = mainResource.resourceFactory(path);
-				if (resource && (resource.sameAs(mainResource) || resource.dependencyOf(mainResource))) {
-					acc.push([type, resource]);
-				}
-				return acc;
-			}, []);
+			}
 
 			if (pickedEvents.length) {
 				try {
+					this.emit('beforeupdate', mainResource);
 					await fn(pickedEvents);
 					this.register(mainResource);
 					this.addUnwatched();
@@ -123,7 +137,7 @@ export default class Watcher extends FSWatcher {
 			}
 		};
 
-		this.register(mainResource);
+		this.register(resourceFactory());
 		this.on('all:aggregated', wrappedFn);
 
 		return () => this.removeListener('all:aggregated', wrappedFn);

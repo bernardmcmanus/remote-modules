@@ -36,7 +36,7 @@ export default function Installer(options) {
 				return result;
 			});
 
-			if (C.env !== 'production') {
+			if (!/node_modules\//.test(__dirname)) {
 				const resourceIndices = new Map();
 				[entrypoint, ...entrypoint.getDeepDependencySet()].forEach(resource => {
 					if (

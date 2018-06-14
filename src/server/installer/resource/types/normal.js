@@ -92,7 +92,10 @@ export default class NormalResource {
 			isInstalledPackage: () => contextFactory.isInstalledPackage(this.slug)
 		});
 
-		Object.assign(this, pick(ctx, ['error', 'moduleId', 'origin', 'packageId', 'pid', 'slug']));
+		Object.assign(
+			this,
+			pick(ctx, ['error', 'moduleId', 'origin', 'packageId', 'pid', 'slug', 'url'])
+		);
 	}
 
 	size = -1;
@@ -127,17 +130,24 @@ export default class NormalResource {
 
 	getBabelOptions = (() => {
 		let called;
-		return () => {
-			// Make sure babel options are only applied once
-			const options = called
-				? {}
-				: {
-						extends: this.getBabelrc(),
-						...this.options.babel
-				  };
-			called = true;
-			return options;
-		};
+		return defineProperties(
+			() => {
+				// Make sure babel options are only applied once
+				const options = called
+					? {}
+					: {
+							extends: this.getBabelrc(),
+							...this.options.babel
+					  };
+				called = true;
+				return options;
+			},
+			{
+				clear: () => {
+					called = false;
+				}
+			}
+		);
 	})();
 
 	hydrate = once(({ resolverPaths, ...other }) => {
@@ -171,9 +181,7 @@ export default class NormalResource {
 
 	addToBundle(id, options) {
 		if (get(this, ['bundle', 'id']) !== id) {
-			if (this.bundle) {
-				this.bundle.delete(this);
-			}
+			this.removeFromBundle();
 			this.bundle = this.bundleFactory(id, {
 				options: {
 					...this.options,
@@ -185,15 +193,19 @@ export default class NormalResource {
 		}
 	}
 
+	removeFromBundle() {
+		if (this.bundle) {
+			this.bundle.delete(this);
+			this.bundle = null;
+		}
+	}
+
 	markDirty(history = new Set([this.pid])) {
 		this.dirty = true;
 		this.loaded = false;
 		this.sourceChecksum = null;
 		this.getSourceChecksum.clear();
-
-		if (this.bundle) {
-			this.bundle.delete(this);
-		}
+		this.getBabelOptions.clear();
 
 		this.dependents.forEach(resource => {
 			if (!history.has(resource.pid)) {
@@ -208,6 +220,10 @@ export default class NormalResource {
 		});
 
 		this.contextFactory.uncache({ origin: this.origin });
+
+		if (this.bundle) {
+			this.bundle.reset(this);
+		}
 	}
 
 	getResolverPaths() {
@@ -455,8 +471,8 @@ export default class NormalResource {
 
 	addDependency(requestObject, resource) {
 		const { dependencies, requests } = this;
-		if (!requests.has(requestObject.value)) {
-			requests.set(requestObject.value, { ...requestObject, pid: resource.pid });
+		if (!requests.has(requestObject.key)) {
+			requests.set(requestObject.key, { ...requestObject, pid: resource.pid });
 		}
 		if (!dependencies.has(resource.pid)) {
 			dependencies.set(resource.pid, resource);
@@ -552,7 +568,7 @@ export default class NormalResource {
 
 	toJSON() {
 		const { contextFactory, mutations, resolverPaths } = this;
-		const requests = [...this.requests.values()].map(req => pick(req, ['value', 'async']));
+		const requests = [...this.requests.values()].map(req => omit(req, ['pid']));
 		const source = Buffer.isBuffer(this.source) ? Array.from(this.source) : this.source;
 		const output =
 			(this.output !== this.source &&

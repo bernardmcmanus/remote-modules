@@ -50,14 +50,17 @@ export function omit(target, keys) {
 }
 
 export function stripBounding(value, pattern) {
-	const regexp = new RegExp(`^${pattern}|${pattern}$`);
-	return value && value.replace(regexp, '');
+	return value && value.replace(new RegExp(`^${pattern}|${pattern}$`), '');
+}
+
+export function isAbsoluteURL(path) {
+	return Boolean(path && /^(\w+:)?\/\//.test(path));
 }
 
 export function isAbsolutePath(path) {
-	return /^\//.test(path);
+	return Boolean(path && /^\/([^/]|$)/.test(path));
 }
 
 export function isRelativePath(path) {
-	return /^\.{1,2}(?:\/|$)/.test(path);
+	return Boolean(path && /^\.{1,2}(?:\/|$)/.test(path));
 }

@@ -2,7 +2,6 @@ import createParser from './parser';
 import Writer from '../writer';
 import DefaultAdapter from '../default';
 import { createAdapter } from '../';
-import { assembleResourceURL } from '../../../../../lib/url-builder';
 import escapeRegExp from '../../../../../lib/helpers/escapeRegExp';
 
 export default (C, ctx) => {
@@ -37,10 +36,9 @@ export default (C, ctx) => {
 									// ${type} [ @value =~ '${regexp.source}' ]
 								`);
 								if (dependency.isNormal()) {
-									const url = assembleResourceURL(C.server.publicPath, dependency.moduleId);
 									nodes.forEach(node => {
 										// eslint-disable-next-line no-param-reassign
-										node.value = node.value.replace(regexp, `$1${url}$2`);
+										node.value = node.value.replace(regexp, `$1${dependency.url}$2`);
 									});
 								} else if (dependency.isExternal()) {
 									nodes.forEach(node => {

@@ -42,7 +42,7 @@ export default class ModuleTransport {
 		if (!loader.getFromContext(pid)) {
 			if (pid) {
 				const script = document.createElement('script');
-				const url = loader.getResourceURL(request, parent);
+				const url = loader.resolveURL(request, parent);
 				await new Promise((resolve, reject) => {
 					script.onload = () => resolve();
 					script.onerror = () => reject(new Error(`Failed to load '${url}'`));
@@ -58,7 +58,7 @@ export default class ModuleTransport {
 						script.innerHTML = JSON.stringify(manifestJSON);
 						document.head.appendChild(script);
 					}),
-					loader.fetch(loader.getResourceURL(request, parent)).then(async res => {
+					loader.fetch(loader.resolveURL(request, parent)).then(async res => {
 						if (res.ok) {
 							const script = document.createElement('script');
 							moduleId = res.headers['x-module-id'];
@@ -66,6 +66,12 @@ export default class ModuleTransport {
 							script.setAttribute('data-pid', pid);
 							script.innerHTML = await res.text();
 							document.head.appendChild(script);
+							// JSDOM doesn't execute scripts synchronously
+							if (process.env.NODE_ENV !== 'production' && !loader.getFromContext(pid)) {
+								await new Promise(resolve => {
+									script.addEventListener('load', resolve);
+								});
+							}
 						} else {
 							const { message, ...other } = await res.json();
 							const messageWithContext = parent ? `${message}${parent.trace()}` : message;
