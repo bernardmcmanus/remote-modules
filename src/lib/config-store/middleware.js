@@ -41,6 +41,7 @@ export function ExternalMiddleware(test) {
 			test,
 			ctx => {
 				ctx.external = true;
+				ctx.force = ctx.request;
 			}
 		])
 	});

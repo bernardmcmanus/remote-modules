@@ -2,6 +2,7 @@ import merge from 'deepmerge';
 import less from 'less';
 
 import CSSAdapter from '../css';
+import { isAbsoluteURL } from '../../../../../lib/helpers';
 import { readFileAsync } from '../../../../../lib/helpers/fs';
 
 class ImportManager extends less.FileManager {
@@ -10,8 +11,8 @@ class ImportManager extends less.FileManager {
 		this.resource = resource;
 	}
 	// eslint-disable-next-line class-methods-use-this
-	supports() {
-		return true;
+	supports(filename) {
+		return !isAbsoluteURL(filename);
 	}
 	// eslint-disable-next-line class-methods-use-this
 	supportsSync() {

@@ -243,6 +243,7 @@ export default function ResourceFactory(options) {
 						const dependency = factory(requestObject, resource);
 						resource.addDependency(requestObject, dependency);
 						if (missingRequests.has(requestObject) && dependency.isNull()) {
+							resource.removeFromBundle();
 							resource.markDirty();
 						}
 					});
@@ -268,6 +269,7 @@ export default function ResourceFactory(options) {
 				}
 			} else {
 				bundleFactory.cache.clear();
+				contextFactory.uncache();
 				readPackage.cache.clear();
 				createResource.cache.clear();
 				factory.load.clear();
@@ -302,7 +304,6 @@ export default function ResourceFactory(options) {
 			});
 		},
 		async reset() {
-			contextFactory.uncache();
 			factory.uncache();
 			await rimrafAsync(C.outputDir);
 		}

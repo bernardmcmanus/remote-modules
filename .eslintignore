@@ -1,3 +1,5 @@
 coverage/
 dist/
 dev/remote-package/
+example/
+node_modules/

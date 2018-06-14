@@ -60,7 +60,7 @@ function createScopeRouter(C, watcher) {
 				getModuleMap.clear();
 			});
 		} else if (C.watch) {
-			watcher.once('update', () => {
+			watcher.once('beforeupdate', () => {
 				delete require.cache[outputPath];
 				getModuleMap.clear();
 			});
@@ -77,7 +77,7 @@ function createScopeRouter(C, watcher) {
 				getAssetMap.clear();
 			});
 		} else if (C.watch) {
-			watcher.once('update', () => {
+			watcher.once('beforeupdate', () => {
 				delete require.cache[outputPath];
 				getAssetMap.clear();
 			});
@@ -94,7 +94,7 @@ function createScopeRouter(C, watcher) {
 		if (ENV === 'test') {
 			delete require.cache[path];
 		} else if (C.watch) {
-			watcher.once('update', () => {
+			watcher.once('beforeupdate', () => {
 				delete require.cache[path];
 			});
 		}
@@ -201,7 +201,12 @@ function createScopeRouter(C, watcher) {
 		});
 	}
 
-	router.get('/static/:path(.*)', async ctx => {
+	/**
+	 * FIXME: This is weird, but it's presumably common for
+	 * static assets to live in '<root>/static', which means
+	 * their paths would be of the form '/static/static/<asset>'.
+	 */
+	router.get('/static(/static)?/:path(.*)', async ctx => {
 		const { path } = ctx.params;
 		if (staticFiles.has(path)) {
 			ctx.body = await getResponseBody(path);
@@ -220,7 +225,7 @@ function createScopeRouter(C, watcher) {
 			ctx.body = getManifestJSON(manifestPath);
 			ctx.type = '.json';
 		} catch (err) {
-			if (err.code !== 'ENOENT') {
+			if (err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND') {
 				throw err;
 			}
 			ctx.status = 404;
@@ -322,6 +327,18 @@ function createScopeRouter(C, watcher) {
 function createServer(routers) {
 	const app = new Koa();
 	const appRouter = new Router();
+	let statusCounts;
+
+	if (ENV === 'test') {
+		statusCounts = new Map();
+		appRouter.use(async (ctx, next) => {
+			await next();
+			if (!statusCounts.get(ctx.status)) {
+				statusCounts.set(ctx.status, 0);
+			}
+			statusCounts.set(ctx.status, statusCounts.get(ctx.status) + 1);
+		});
+	}
 
 	appRouter.get('/up/', async ctx => {
 		ctx.state.noLog = true;
@@ -349,7 +366,7 @@ function createServer(routers) {
 
 	const server = http.createServer(app.callback());
 
-	return { app, server };
+	return { app, server, statusCounts };
 }
 
 export default function Server(options) {
@@ -360,9 +377,9 @@ export default function Server(options) {
 		const scopeLogger = logger.child({ name: c.scopeKey });
 		const install = new Installer(c);
 		return async (...args) => {
-			const main = await install(...args);
+			const { resourceFactory } = await install(...args);
 			if (c.watch) {
-				watcher.subscribe(main, async events => {
+				watcher.subscribe(resourceFactory, async events => {
 					events.forEach(([, resource]) => resource.markDirty());
 					await install(...args);
 				});
@@ -375,17 +392,18 @@ export default function Server(options) {
 					);
 				});
 			}
-			return main;
+			return resourceFactory();
 		};
 	});
 
-	let server;
 	let app;
+	let server;
+	let statusCounts;
 
 	function listen(port = C.server.port) {
 		if (!server) {
 			const routers = C.scopes().map(scope => createScopeRouter(C.use(scope), watcher));
-			({ app, server } = createServer(routers));
+			({ app, server, statusCounts } = createServer(routers));
 		}
 		return new Promise(resolve => {
 			server.listen(port, resolve);
@@ -416,6 +434,9 @@ export default function Server(options) {
 		},
 		get server() {
 			return server;
+		},
+		get statusCounts() {
+			return statusCounts;
 		}
 	});
 }

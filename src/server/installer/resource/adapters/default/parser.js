@@ -1,40 +1,58 @@
+import Path from 'path';
+
 import * as babylon from '@babel/parser';
 import * as babel from '@babel/core';
 import generate from '@babel/generator';
 import { codeFrameColumns } from '@babel/code-frame';
 import ASTQ from 'astq';
+import glob from 'glob';
 import UglifyJS from 'uglify-es';
 import cloneDeep from 'clone-deep';
 import merge from 'deepmerge';
 import babelMerge from 'babel-merge/src';
 
 import Parser from '../parser';
+import generateResourceRequest from '../../../generators/resource-request';
 import memoize from '../../../../../lib/helpers/memoize';
 import pick from '../../../../../lib/helpers/pick';
-import { pickDefined } from '../../../../../lib/helpers';
+import { isPrimitive, pickDefined } from '../../../../../lib/helpers';
 
 const astq = new ASTQ();
 
+const excludeFromQuery = new Set(['start', 'end', 'computed']);
+
 const buildQuery = memoize(input => {
+	let brackets;
 	const node = typeof input === 'string' ? babylon.parseExpression(input) : input;
-	let query = `${node.type}`;
-	switch (node.type) {
-		case 'Identifier':
-			query = `${query} [ @name == '${node.name}' ]`;
-			break;
-		case 'MemberExpression':
-			query = `${query} [
-				/:object ${buildQuery(node.object)} && /:property ${buildQuery(node.property)}
-			]`;
-			break;
-		case 'StringLiteral':
-			query = `${query} [ @value == '${node.value}' ]`;
-			break;
-		default:
-			// noop
-			break;
-	}
-	return query;
+	return `${Object.entries(node).reduce((acc, [key, value]) => {
+		switch (true) {
+			case excludeFromQuery.has(key):
+				// noop
+				break;
+			case key === 'type':
+				// eslint-disable-next-line no-param-reassign
+				acc = `${acc}${value}`;
+				break;
+			case Boolean(value && value.type):
+				// nodes
+				// eslint-disable-next-line no-param-reassign
+				acc = `${acc} ${brackets ? '&&' : '['} /:${key} ${buildQuery(value)}`;
+				brackets = true;
+				break;
+			case isPrimitive(value):
+				// primitive attributes
+				// eslint-disable-next-line no-param-reassign
+				acc = `${acc} ${brackets ? '&&' : '['} @${key} == ${
+					typeof value === 'string' ? `'${value}'` : value
+				}`;
+				brackets = true;
+				break;
+			default:
+				// noop
+				break;
+		}
+		return acc;
+	}, '')}${brackets ? ' ]' : ''}`;
 });
 
 function getBabelOpts(parser, resource, options) {
@@ -82,14 +100,14 @@ export default C =>
 						`
 						// ImportDeclaration
 					`
-					).map(node => ({ value: node.source.value })),
+					),
 					...this.runQuery(
 						`
 						// CallExpression [
 							/:callee ${buildQuery('require')}
 						]
 					`
-					).map(node => ({ value: node.arguments[0].value })),
+					),
 					...this.runQuery(
 						`
 						// CallExpression [(
@@ -98,16 +116,24 @@ export default C =>
 							/:callee Import
 						)]
 					`
-					).map(node => ({ value: node.arguments[0].value, async: true }))
+					)
 				]
-					.reduce((acc, request) => {
-						if (request.value && !acc.has(request.value)) {
-							acc.set(request.value, request);
+					.reduce((acc, node) => {
+						const request = generateResourceRequest(node, buildQuery);
+						if (request.value && !acc.has(request.getKey())) {
+							const key = request.getKey();
+							acc.set(key, { ...request, key });
+						} else if (request.pattern) {
+							const cwd = Path.dirname(this.filename);
+							glob.sync(request.pattern, { cwd }).forEach(value => {
+								const key = request.getKey(value);
+								acc.set(key, { ...request, key, value });
+							});
 						}
 						return acc;
 					}, new Map())
 					.values()
-			);
+			).filter(request => request.value);
 		},
 		transform(resource, options) {
 			const opts = getBabelOpts(this, resource, { ...options, ast: true, code: false });

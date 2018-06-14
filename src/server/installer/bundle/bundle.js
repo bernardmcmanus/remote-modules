@@ -1,35 +1,47 @@
+import { createHash } from 'crypto';
+
 import hash from 'object-hash';
 import bigInt from 'big-integer';
 
 import defineProperties from '../../../lib/helpers/defineProperties';
 import once from '../../../lib/helpers/once';
-import pick from '../../../lib/helpers/pick';
 import { slugToAbsolutePath } from '../context';
+
+function md5(value) {
+	return createHash('md5')
+		.update(value)
+		.digest('hex');
+}
 
 export default class Bundle extends Set {
 	constructor(id, { writer, options }) {
 		super();
 
-		Object.assign(this, {
-			id,
-			writer,
-			options: {
-				minSize: 5e4,
-				maxSize: 10e4,
-				...options
-			}
-		});
+		this.id = id;
 
 		defineProperties(this, {
 			bytes: {
 				writable: true
 			},
+			options: {
+				minSize: 5e4,
+				maxSize: 10e4,
+				...options
+			},
 			pending: new Set(),
-			slugs: new Map()
+			slugs: new Map(),
+			writer
 		});
 	}
 
 	bytes = once(() => [...this].reduce((acc, resource) => acc + resource.size, 0));
+
+	reset(resource) {
+		this.slugs.delete(resource);
+		this.pending.delete(resource);
+		this.delete(resource);
+		this.add(resource);
+	}
 
 	add(resource) {
 		if (resource.loaded) {
@@ -81,9 +93,7 @@ export default class Bundle extends Set {
 				const remainingBytes = this.bytes() - allocatedBytes;
 				if (remainingBytes === 0 || (assetBytes >= maxSize && remainingBytes >= minSize)) {
 					const assetId = `${hash(
-						[...acc]
-							.sort((a, b) => a.pid - b.pid)
-							.map(r => pick(r, ['moduleId', 'optionsChecksum', 'sourceChecksum'])),
+						[...acc].sort((a, b) => a.pid - b.pid).map(r => ({ 0: r.moduleId, 1: md5(r.output) })),
 						{ algorithm: 'md5' }
 					)}${extension}`;
 					cutAsset(assetId);

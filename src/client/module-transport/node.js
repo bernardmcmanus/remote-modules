@@ -26,7 +26,7 @@ export default class ModuleTransport {
 						if (loader.getFromContext(pid)) {
 							module = loader.register({ content: 'this;', id: moduleId, pid, parent });
 						} else {
-							const url = loader.getResourceURL(request, parent);
+							const url = loader.resolveURL(request, parent);
 							const res = await loader.fetch(url);
 							if (res.ok) {
 								moduleId = res.headers['x-module-id'];
