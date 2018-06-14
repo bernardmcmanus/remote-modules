@@ -2,10 +2,12 @@ import Path from 'path';
 import { inspect } from 'util';
 
 import defineProperties from '../../../../lib/helpers/defineProperties';
+import { isAbsoluteURL } from '../../../../lib/helpers';
+import { assembleResourceURL } from '../../../../lib/url-builder';
 import { isCore } from '../../../../lib/resolver';
 
 export default class SourceContext extends Map {
-	constructor(req, baseDir, factory) {
+	constructor(req, baseDir, factory, options) {
 		const originalRequest = (req && req.value) || req;
 
 		super([
@@ -18,7 +20,7 @@ export default class SourceContext extends Map {
 			['resolved', undefined]
 		]);
 
-		defineProperties(this, { baseDir, factory, originalRequest });
+		defineProperties(this, { baseDir, factory, options, originalRequest });
 
 		this.request = originalRequest;
 	}
@@ -77,6 +79,11 @@ export default class SourceContext extends Map {
 		return resolved ? factory.getSlug(origin) : origin;
 	}
 
+	get url() {
+		const { options, moduleId } = this;
+		return this.isExternal() ? moduleId : assembleResourceURL(options.server.publicPath, moduleId);
+	}
+
 	set external(value) {
 		if (this.get('external') !== value) {
 			this.set('external', value);
@@ -120,7 +127,9 @@ export default class SourceContext extends Map {
 	}
 
 	isExternal() {
-		return this.get('external') !== undefined ? this.get('external') : isCore(this.resolved);
+		return this.get('external') !== undefined
+			? this.get('external')
+			: isCore(this.resolved) || isAbsoluteURL(this.resolved);
 	}
 
 	isNull() {

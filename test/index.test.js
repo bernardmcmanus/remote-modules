@@ -2863,6 +2863,9 @@ describe('RemoteLoader', () => {
 				`${c.server.uri}/browser?auto=false&dynamic=1&import=<${c.scopeKey}>/:./${c.entry}`,
 				assertions
 			);
+
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
 		}, c);
 	});
 
@@ -2912,6 +2915,9 @@ describe('RemoteLoader', () => {
 				`${c.server.uri}/browser?auto=false&dynamic=1&import=<${c.scopeKey}>/:./${c.entry}`,
 				assertions
 			);
+
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
 		}, c);
 	});
 
@@ -2927,7 +2933,7 @@ describe('RemoteLoader', () => {
 
 		return getServer(async server => {
 			await server.install();
-			return getClient(async client => {
+			await getClient(async client => {
 				await client.import(`<${c.scopeKey}>`);
 				const { manifest } = await client.use(c.scopeKey).load();
 				// Make sure dynamic imports were not added to the manifest
@@ -2936,6 +2942,8 @@ describe('RemoteLoader', () => {
 					'Expected manifest to not include react-dom/server.js'
 				);
 			});
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
 		}, c);
 	});
 
@@ -2953,7 +2961,7 @@ describe('RemoteLoader', () => {
 
 		return getServer(async server => {
 			await server.install();
-			return getClient(async client => {
+			await getClient(async client => {
 				await client.import(`<${c.scopeKey}>`);
 				const { manifest } = await client.use(c.scopeKey).load();
 				// Make sure dynamic imports were not added to the manifest
@@ -2962,6 +2970,8 @@ describe('RemoteLoader', () => {
 					'Expected manifest to not include react-dom/server.js'
 				);
 			});
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
 		}, c);
 	});
 });

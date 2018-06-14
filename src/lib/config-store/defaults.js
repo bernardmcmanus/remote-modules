@@ -7,6 +7,7 @@ import LESSAdapter from '../../server/installer/resource/adapters/less';
 import CSSAdapter from '../../server/installer/resource/adapters/css';
 
 import { defaultCore, defaultExtensions, defaultMainFields, defaultModuleDirs } from '../resolver';
+import { isAbsoluteURL } from '../helpers';
 import { ExternalMiddleware } from './middleware';
 import ConfigStore from './';
 
@@ -92,6 +93,8 @@ export default function getDefaults(key) {
 				uglify: noop(/* calculated */),
 				adapters: getDefaults('adapters'),
 				middleware: [
+					// Treat absolute URIs as external resources
+					ExternalMiddleware(ctx => isAbsoluteURL(ctx.request)),
 					// Treat data URIs as external resources
 					ExternalMiddleware(/^data:\w+/i)
 				],

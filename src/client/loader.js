@@ -76,7 +76,7 @@ export default class RemoteLoader {
 		return assembleResourceURL(this.baseURL, id, query);
 	}
 
-	getResourceURL(request, parent, query) {
+	resolveURL(request, parent, query) {
 		const moduleId = this.resolve(request, parent);
 		return this.getResourceURLFromID(moduleId, query);
 	}
@@ -211,7 +211,7 @@ export default class RemoteLoader {
 	}
 
 	async resolveAsync(request, parent) {
-		const url = this.getResourceURL(request, parent);
+		const url = this.resolveURL(request, parent);
 		const res = await this.fetch(url, { method: 'HEAD' });
 		if (!res.ok) {
 			this._throwNotFound(request);

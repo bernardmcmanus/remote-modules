@@ -66,9 +66,11 @@ export default () =>
 					}, [])
 				]
 					.reduce((acc, request) => {
-						request.value = request.value.replace(/["']/g, '');
-						if (request.value && !acc.has(request.value)) {
-							acc.set(request.value, request);
+						if (request.value) {
+							const value = request.value.replace(/["']/g, '');
+							if (value && !acc.has(value)) {
+								acc.set(value, { ...request, value, key: value });
+							}
 						}
 						return acc;
 					}, new Map())

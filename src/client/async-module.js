@@ -92,6 +92,10 @@ export default class AsyncModule {
 		return this.loader.resolveDynamic(request, this);
 	}
 
+	resolveURL(request) {
+		return this.loader.resolveURL(request, this);
+	}
+
 	exec() {
 		const { id, initializer, loaded } = this;
 		if (!loaded) {
