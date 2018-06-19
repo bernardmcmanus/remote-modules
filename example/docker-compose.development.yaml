@@ -1,0 +1,29 @@
+version: '3'
+services:
+
+  fragment-a:
+    command: npm start
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./fragment:/src
+      - /src/.remote
+      - /src/node_modules
+
+  fragment-b:
+    command: npm start
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./fragment:/src
+      - /src/.remote
+      - /src/node_modules
+
+  shell:
+    command: npm start
+    image: remote-module/shell
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./shell:/src
+      - /src/node_modules

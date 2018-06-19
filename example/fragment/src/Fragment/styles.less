@@ -1,0 +1,23 @@
+@import (css) 'https://fonts.googleapis.com/css?family=Ubuntu';
+
+.Fragment {
+	@container-size: 75;
+
+	font-family: 'Ubuntu', sans-serif;
+	text-align: center;
+	width: unit(@container-size, vw);
+	margin: auto;
+
+	> h1 {
+		font-size: 5vh;
+		display: inline-block;
+	}
+
+	> .Image {
+		height: unit(@container-size, vh);
+
+		> img {
+			height: 100%;
+		}
+	}
+}

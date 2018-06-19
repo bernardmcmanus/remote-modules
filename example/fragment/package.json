@@ -1,0 +1,32 @@
+{
+  "name": "remote-module-example-fragment",
+  "version": "0.1.0",
+  "private": true,
+  "description": "remote module example fragment",
+  "license": "MIT",
+  "main": "src",
+  "scripts": {
+    "build": "NODE_ENV=${NODE_ENV:-production} remote-module install -f",
+    "start": "NODE_ENV=${NODE_ENV:-development} nodemon --exec 'remote-module start --watch'"
+  },
+  "dependencies": {
+    "classcat": "^3.1.2",
+    "core-js": "^2.5.5",
+    "prop-types": "^15.6.1",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "react-helmet": "^5.2.0",
+    "remote-module": "file:/remote-module.tgz"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.48",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.48",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.48",
+    "@babel/plugin-transform-react-constant-elements": "^7.0.0-beta.48",
+    "@babel/preset-env": "^7.0.0-beta.48",
+    "@babel/preset-react": "^7.0.0-beta.48",
+    "babel-plugin-jsx-control-statements": "^3.2.8",
+    "babel-plugin-transform-react-remove-prop-types": "^0.4.13",
+    "nodemon": "^1.12.1"
+  }
+}
