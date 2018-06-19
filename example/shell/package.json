@@ -1,0 +1,53 @@
+{
+  "name": "remote-module-example-shell",
+  "version": "0.1.0",
+  "private": true,
+  "description": "remote module example shell",
+  "license": "MIT",
+  "main": "dist/server",
+  "scripts": {
+    "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:dll && npm run build:browser && npm run build:node",
+    "build:browser": "npm run webpack -- --config webpack/config.shell.js",
+    "build:dll": "npm run webpack -- --config webpack/config.dll.js",
+    "build:node": "babel src --copy-files --out-dir dist --source-maps inline",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "start": "NODE_ENV=${NODE_ENV:-development}; npm run build:dll && nodemon --require @babel/register ./src/server",
+    "webpack": "node -r @babel/register node_modules/.bin/webpack --hide-modules --progress"
+  },
+  "dependencies": {
+    "classcat": "^3.1.2",
+    "core-js": "^2.5.5",
+    "history": "^4.7.2",
+    "koa": "^2.3.0",
+    "koa-conditional-get": "^2.0.0",
+    "koa-etag": "^3.0.0",
+    "koa-mount": "^3.0.0",
+    "koa-router": "^7.2.1",
+    "koa-send": "^4.1.1",
+    "koa-static": "^4.0.1",
+    "prop-types": "^15.6.1",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "react-helmet": "^5.2.0",
+    "remote-module": "file:/remote-module.tgz",
+    "serialize-javascript": "^1.5.0",
+    "universal-router": "^6.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0-beta.48",
+    "@babel/core": "^7.0.0-beta.48",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.48",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.48",
+    "@babel/preset-env": "^7.0.0-beta.48",
+    "@babel/preset-react": "^7.0.0-beta.48",
+    "@babel/register": "^7.0.0-beta.48",
+    "babel-loader": "^8.0.0-beta.2",
+    "copy-webpack-plugin": "^4.5.1",
+    "koa-webpack": "^3.0.2",
+    "nodemon": "^1.12.1",
+    "rimraf": "^2.6.2",
+    "webpack": "^4.8.1",
+    "webpack-cli": "^2.1.3"
+  }
+}
