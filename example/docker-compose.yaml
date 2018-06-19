@@ -1,0 +1,51 @@
+version: '3'
+services:
+
+  base:
+    build: ../
+    image: remote-module/base
+    tty: true
+
+  fragment-a:
+    build:
+      context: ./fragment
+      args:
+        - FRAGMENT_NAME=a
+    image: remote-module/fragment-a
+    depends_on:
+      - base
+    env_file:
+      - .env
+    tty: true
+
+  fragment-b:
+    build:
+      context: ./fragment
+      args:
+        - FRAGMENT_NAME=b
+    image: remote-module/fragment-b
+    depends_on:
+      - base
+    env_file:
+      - .env
+    tty: true
+
+  shell:
+    build: ./shell
+    image: remote-module/shell
+    depends_on:
+      - base
+    env_file:
+      - .env
+    tty: true
+
+  nginx:
+    image: nginx:mainline
+    depends_on:
+      - fragment-a
+      - fragment-b
+      - shell
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
