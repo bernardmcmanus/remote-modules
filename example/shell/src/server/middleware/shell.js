@@ -45,7 +45,7 @@ export default server => {
 						window.__STORE__ = ${serialize(data.store, { isJSON: true })};
 					</script>
 					${data.scripts}
-					<script src="/static/remote-module/client.browser.js"></script>
+					<script src="/static/remote-modules/client.browser.js"></script>
 					<script src="/static/dll.js"></script>
 					<script src="/static/shell.js"></script>
 				</body>

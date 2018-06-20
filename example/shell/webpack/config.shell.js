@@ -23,7 +23,7 @@ export default {
 	},
 	externals: [
 		(context, request, cb) => {
-			if (request === 'remote-module') {
+			if (request === 'remote-modules') {
 				cb(null, 'window ImportClient');
 			} else {
 				cb();
@@ -40,8 +40,8 @@ export default {
 		new CopyWebpackPlugin(
 			[
 				{
-					from: 'node_modules/remote-module/dist/client.browser.js',
-					to: 'remote-module/'
+					from: 'node_modules/remote-modules/dist/client.browser.js',
+					to: 'remote-modules/'
 				},
 				production({ from: 'static' })
 			].filter(Boolean)

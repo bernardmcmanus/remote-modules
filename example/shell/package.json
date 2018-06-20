@@ -1,8 +1,8 @@
 {
-  "name": "remote-module-example-shell",
+  "name": "remote-modules-example-shell",
   "version": "0.1.0",
   "private": true,
-  "description": "remote module example shell",
+  "description": "remote modules example shell",
   "license": "MIT",
   "main": "dist/server",
   "scripts": {
@@ -30,7 +30,7 @@
     "react": "^16.4.0",
     "react-dom": "^16.4.0",
     "react-helmet": "^5.2.0",
-    "remote-module": "file:/remote-module.tgz",
+    "remote-modules": "file:/remote-modules.tgz",
     "serialize-javascript": "^1.5.0",
     "universal-router": "^6.0.0"
   },

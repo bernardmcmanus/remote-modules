@@ -21,7 +21,6 @@ services:
 
   shell:
     command: yarn start
-    image: remote-module/shell
     environment:
       - NODE_ENV=development
     volumes:
