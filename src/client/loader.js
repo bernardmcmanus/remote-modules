@@ -1,5 +1,6 @@
 import Path from 'path';
 import Url from 'url';
+import { createContext } from 'vm';
 
 import AsyncModule from './async-module';
 import ModuleTransport from './module-transport';
@@ -28,7 +29,7 @@ export default class RemoteLoader {
 
 	constructor({
 		uri,
-		context = global,
+		context = createContext(global),
 		externalRequire = getDefaultExternalRequire(this),
 		forceLoad = ENV === 'development',
 		ttl = forceLoad ? 0 : undefined,
