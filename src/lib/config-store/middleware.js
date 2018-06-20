@@ -66,16 +66,16 @@ export function NullMiddleware(test) {
 	return RewriteMiddleware(test, () => null);
 }
 
-export const BundleMiddleware = (() => {
+export const UnionMiddleware = (() => {
 	const interpolator = new Interpolator();
 	let privateInstanceCounter = 0;
 
 	// eslint-disable-next-line no-shadow
-	return function BundleMiddleware({ template, test, ...options } = {}) {
+	return function UnionMiddleware({ template, test, ...options } = {}) {
 		const instanceId = privateInstanceCounter;
 		privateInstanceCounter += 1;
 
-		function getBundleId(resource) {
+		function getUnionId(resource) {
 			return interpolator(
 				[instanceId, template, '{async}', '{adapter.outputType}']
 					.filter(v => v !== undefined)
@@ -87,13 +87,13 @@ export const BundleMiddleware = (() => {
 		const { test: testFn, apply } = Middleware.parseArgs([
 			test,
 			resource => {
-				resource.addToBundle(getBundleId(resource), options);
+				resource.addToUnion(getUnionId(resource), options);
 			}
 		]);
 
 		return new Middleware({
 			type: 'resource',
-			name: 'BundleMiddleware',
+			name: 'UnionMiddleware',
 			test: (resource, ctx) =>
 				resource.isNormal() && resource.adapter.outputType !== 'raw' && testFn(resource, ctx),
 			apply

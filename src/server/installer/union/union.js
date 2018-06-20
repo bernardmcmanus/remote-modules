@@ -13,7 +13,7 @@ function md5(value) {
 		.digest('hex');
 }
 
-export default class Bundle extends Set {
+export default class Union extends Set {
 	constructor(id, { writer, options }) {
 		super();
 
@@ -64,7 +64,7 @@ export default class Bundle extends Set {
 
 	calculateAssetIds() {
 		if (!this.loaded()) {
-			throw new Error(`Cannot calculate asset ids for bundle '${this.id}' before it is loaded`);
+			throw new Error(`Cannot calculate asset ids for union '${this.id}' before it is loaded`);
 		}
 
 		const { minSize, maxSize } = this.options;
