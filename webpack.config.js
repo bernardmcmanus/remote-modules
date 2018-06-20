@@ -74,17 +74,7 @@ export default {
 								}
 							]
 						],
-						plugins: [
-							['module:fast-async', { spec: true }],
-							[
-								'@babel/transform-runtime',
-								{
-									helpers: false,
-									polyfill: false,
-									regenerator: false
-								}
-							]
-						]
+						plugins: [['module:fast-async', { spec: true }]]
 					}
 				}
 			},

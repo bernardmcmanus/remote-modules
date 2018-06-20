@@ -1,5 +1,6 @@
 import Path from 'path';
 import Url from 'url';
+import { createContext, isContext } from 'vm';
 
 import { stripBounding } from '../lib/helpers';
 import defineProperties from '../lib/helpers/defineProperties';
@@ -32,7 +33,7 @@ export default class Client {
 		return [string && string.replace(new RegExp(`^<${escapeRegExp(ns)}>`), ''), ...args];
 	}
 
-	constructor(options) {
+	constructor({ context, ...other }) {
 		defineProperties(
 			this,
 			Client.implements.reduce((acc, method) => {
@@ -40,7 +41,12 @@ export default class Client {
 				return acc;
 			}, {})
 		);
-		Object.assign(this, { options });
+		Object.assign(this, {
+			options: {
+				context: context && (isContext(context) ? context : createContext(context)),
+				...other
+			}
+		});
 	}
 
 	loaders = new Map();

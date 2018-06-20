@@ -5,8 +5,7 @@ module.exports = {
 			{
 				targets: {
 					node: 'current'
-				},
-				useBuiltIns: 'usage'
+				}
 			}
 		]
 	],
@@ -16,13 +15,6 @@ module.exports = {
 			'@babel/proposal-object-rest-spread',
 			{
 				useBuiltIns: true
-			}
-		],
-		[
-			'@babel/transform-runtime',
-			{
-				polyfill: false,
-				regenerator: false
 			}
 		]
 	],
