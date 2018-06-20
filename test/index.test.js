@@ -645,15 +645,15 @@ describe('Installer', () => {
 			assert.equal(await getResourceJSONChecksum(), expected);
 		}));
 
-	it('should generate deterministic cache JSON (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should generate deterministic cache JSON (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
 				extensions: ['.css', '.less'],
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
 
@@ -712,15 +712,15 @@ describe('Installer', () => {
 			})
 		));
 
-	it('should not visit any resources when installing completely from cache (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should not visit any resources when installing completely from cache (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
 				extensions: ['.css', '.less'],
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
 
@@ -750,15 +750,15 @@ describe('Installer', () => {
 		assert.equal(freshCount, cachedJSONCount);
 	});
 
-	it('should hydrate the full dependency tree when installing from cache (bundles)', async () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should hydrate the full dependency tree when installing from cache (unions)', async () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
 				extensions: ['.css', '.less'],
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
 
@@ -808,15 +808,15 @@ describe('Installer', () => {
 		}, c);
 	});
 
-	it('should run a partial install on changed files (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should run a partial install on changed files (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
 				extensions: ['.css', '.less'],
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
 
@@ -932,13 +932,13 @@ describe('Installer', () => {
 		}, c);
 	});
 
-	it('should handle circular dependencies (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should handle circular dependencies (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/circular')]: {
 				entry: 'tests/circular',
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/circular');
 
@@ -1487,15 +1487,15 @@ describe('Installer', () => {
 		);
 	});
 
-	it('should gracefully handle removed dependencies when installing from cache (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should gracefully handle removed dependencies when installing from cache (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
-			[ConfigStore.symbolFor('tests/cached-install/bundles')]: {
+			[ConfigStore.symbolFor('tests/cached-install/unions')]: {
 				entry: 'tests/cached-install',
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
-		}).use('tests/cached-install/bundles');
+		}).use('tests/cached-install/unions');
 
 		return getDisposer(
 			() =>
@@ -1618,13 +1618,13 @@ describe('Watcher', () => {
 		}, c);
 	});
 
-	it('should watch the dependency tree for changes (bundles)', async () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should watch the dependency tree for changes (unions)', async () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/watcher')]: {
 				entry: 'tests/watcher',
-				middleware: [BundleMiddleware()],
+				middleware: [UnionMiddleware()],
 				watch: true
 			}
 		}).use('tests/watcher');
@@ -1679,13 +1679,13 @@ describe('Watcher', () => {
 		}, c);
 	});
 
-	it('should only watch resources in the dependency tree (bundles)', async () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should only watch resources in the dependency tree (unions)', async () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/watcher')]: {
 				entry: 'tests/watcher',
-				middleware: [BundleMiddleware()],
+				middleware: [UnionMiddleware()],
 				watch: true
 			}
 		}).use('tests/watcher');
@@ -1750,13 +1750,13 @@ describe('Watcher', () => {
 		}, c);
 	});
 
-	it('should propagate changes up the dependency tree (bundles)', async () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should propagate changes up the dependency tree (unions)', async () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/watcher')]: {
 				entry: 'tests/watcher',
-				middleware: [BundleMiddleware()],
+				middleware: [UnionMiddleware()],
 				watch: true
 			}
 		}).use('tests/watcher');
@@ -1844,13 +1844,13 @@ describe('Watcher', () => {
 		}, c);
 	});
 
-	it('should watch dynamically added resources (bundles)', async () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should watch dynamically added resources (unions)', async () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/watcher')]: {
 				entry: 'tests/watcher',
-				middleware: [BundleMiddleware()],
+				middleware: [UnionMiddleware()],
 				watch: true
 			}
 		}).use('tests/watcher');
@@ -1961,13 +1961,13 @@ describe('Watcher', () => {
 		}, c);
 	});
 
-	it('should gracefully drop orphaned resources (bundles)', async () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should gracefully drop orphaned resources (unions)', async () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/watcher')]: {
 				entry: 'tests/watcher',
-				middleware: [BundleMiddleware()],
+				middleware: [UnionMiddleware()],
 				watch: true
 			}
 		}).use('tests/watcher');
@@ -2098,13 +2098,13 @@ describe('Watcher', () => {
 		}, c);
 	});
 
-	it('should gracefully drop deleted resources (bundles)', async () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should gracefully drop deleted resources (unions)', async () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/watcher')]: {
 				entry: 'tests/watcher',
-				middleware: [BundleMiddleware()],
+				middleware: [UnionMiddleware()],
 				watch: true
 			}
 		}).use('tests/watcher');
@@ -2220,13 +2220,13 @@ describe('Watcher', () => {
 		}, c);
 	});
 
-	it('should gracefully recover after an install fails (bundles)', async () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should gracefully recover after an install fails (unions)', async () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/watcher')]: {
 				entry: 'tests/watcher',
-				middleware: [BundleMiddleware()],
+				middleware: [UnionMiddleware()],
 				watch: true
 			}
 		}).use('tests/watcher');
@@ -2400,13 +2400,13 @@ describe('Client', () => {
 		}, c);
 	});
 
-	it('should render static tags given an import request (bundles)', () => {
+	it('should render static tags given an import request (unions)', () => {
 		const basePath = '/fragments';
 		const uri = `${C.getRoot().server.uri}${basePath}`;
-		const { BundleMiddleware } = ConfigStore.middleware;
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
-			middleware: [BundleMiddleware()],
+			middleware: [UnionMiddleware()],
 			server: {
 				uri: `${uri}/test`
 			}
@@ -2578,13 +2578,13 @@ describe('RemoteLoader', () => {
 		}, c);
 	});
 
-	it('should not pollute the module context (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should not pollute the module context (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/loader')]: {
 				entry: 'tests/loader',
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/loader');
 
@@ -2636,13 +2636,13 @@ describe('RemoteLoader', () => {
 		}, c);
 	});
 
-	it('should never initialize the same module more than once (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should never initialize the same module more than once (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/loader')]: {
 				entry: 'tests/loader',
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/loader');
 
@@ -2737,13 +2737,13 @@ describe('RemoteLoader', () => {
 		}, c);
 	});
 
-	it('should be able to load non-entrypoint files (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should be able to load non-entrypoint files (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/circular')]: {
 				entry: 'tests/circular',
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/circular');
 
@@ -2869,15 +2869,15 @@ describe('RemoteLoader', () => {
 		}, c);
 	});
 
-	it('should load and render stylesheets in browser (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should load and render stylesheets in browser (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'browser',
 				extensions: ['.css', '.less'],
-				middleware: [BundleMiddleware()],
+				middleware: [UnionMiddleware()],
 				server: {
 					static: ['dist/client.browser.js?(.map)']
 				}
@@ -2947,15 +2947,15 @@ describe('RemoteLoader', () => {
 		}, c);
 	});
 
-	it('should NOT attempt to render stylesheets on node (bundles)', () => {
-		const { BundleMiddleware } = ConfigStore.middleware;
+	it('should NOT attempt to render stylesheets on node (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
 				extensions: ['.css', '.less'],
-				middleware: [BundleMiddleware()]
+				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
 

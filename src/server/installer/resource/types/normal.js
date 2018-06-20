@@ -12,13 +12,13 @@ import once from '../../../../lib/helpers/once';
 import pick from '../../../../lib/helpers/pick';
 
 export default class NormalResource {
-	constructor({ ctx, adapter, resourceFactory, contextFactory, bundleFactory, logger, options }) {
+	constructor({ ctx, adapter, resourceFactory, contextFactory, unionFactory, logger, options }) {
 		let source;
 
 		defineProperties(this, {
 			resourceFactory,
 			contextFactory,
-			bundleFactory,
+			unionFactory,
 			logger,
 			options,
 			adapter,
@@ -30,7 +30,7 @@ export default class NormalResource {
 				enumerable: true,
 				writable: true
 			},
-			bundle: {
+			union: {
 				writable: true
 			},
 			dirty: {
@@ -179,24 +179,24 @@ export default class NormalResource {
 		}
 	}
 
-	addToBundle(id, options) {
-		if (get(this, ['bundle', 'id']) !== id) {
-			this.removeFromBundle();
-			this.bundle = this.bundleFactory(id, {
+	addToUnion(id, options) {
+		if (get(this, ['union', 'id']) !== id) {
+			this.removeFromUnion();
+			this.union = this.unionFactory(id, {
 				options: {
 					...this.options,
 					...options
 				},
 				writer: this.adapter.writer
 			});
-			this.bundle.add(this);
+			this.union.add(this);
 		}
 	}
 
-	removeFromBundle() {
-		if (this.bundle) {
-			this.bundle.delete(this);
-			this.bundle = null;
+	removeFromUnion() {
+		if (this.union) {
+			this.union.delete(this);
+			this.union = null;
 		}
 	}
 
@@ -221,8 +221,8 @@ export default class NormalResource {
 
 		this.contextFactory.uncache({ origin: this.origin });
 
-		if (this.bundle) {
-			this.bundle.reset(this);
+		if (this.union) {
+			this.union.reset(this);
 		}
 	}
 
@@ -243,7 +243,7 @@ export default class NormalResource {
 	}
 
 	getAssetId() {
-		return this.bundle ? this.bundle.getAssetId(this) : this.getOutputSlug();
+		return this.union ? this.union.getAssetId(this) : this.getOutputSlug();
 	}
 
 	getOutputSlug() {
@@ -294,7 +294,7 @@ export default class NormalResource {
 	}
 
 	write() {
-		return this.bundle.write();
+		return this.union.write();
 	}
 
 	async runVisitor(name, fn = noop) {
@@ -315,8 +315,8 @@ export default class NormalResource {
 		const requestProcessors = [];
 		let shouldWrite;
 
-		if (!this.bundle) {
-			this.addToBundle(this.slug);
+		if (!this.union) {
+			this.addToUnion(this.slug);
 		}
 
 		if (await this.isPristine()) {
@@ -485,8 +485,8 @@ export default class NormalResource {
 	removeDependency(resource) {
 		resource.dependents.delete(this.pid);
 		if (resource.isOrphaned()) {
-			if (this.bundle) {
-				this.bundle.delete(resource);
+			if (this.union) {
+				this.union.delete(resource);
 			}
 			resource.dependencies.forEach(dependency => {
 				resource.removeDependency(dependency);

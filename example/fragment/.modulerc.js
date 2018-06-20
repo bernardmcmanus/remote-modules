@@ -9,14 +9,14 @@ const externals = new Set([
 	'universal-router'
 ]);
 
-module.exports = ({ Scope, BundleMiddleware, ExternalMiddleware, GenericMiddleware }) => ({
+module.exports = ({ Scope, ExternalMiddleware, GenericMiddleware, UnionMiddleware }) => ({
 	define: {
 		'process.env.FRAGMENT_NAME': FRAGMENT_NAME
 	},
 	extensions: ['.less'],
 	middleware: [
-		NODE_ENV === 'production' && BundleMiddleware(),
-		BundleMiddleware({
+		NODE_ENV === 'production' && UnionMiddleware(),
+		UnionMiddleware({
 			maxSize: Infinity,
 			template: '{packageId}',
 			test: resource => resource.packageId === 'core-js'
