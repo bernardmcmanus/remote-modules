@@ -3,7 +3,7 @@
 // 	'core-js'
 // ]);
 
-module.exports = ({ BundleMiddleware, ExternalMiddleware, Scope, Shim }) => ({
+module.exports = ({ ExternalMiddleware, UnionMiddleware, Scope, Shim }) => ({
 	// [Scope('node')]: {
 	// 	preset: 'node'
 	// },
@@ -20,6 +20,6 @@ module.exports = ({ BundleMiddleware, ExternalMiddleware, Scope, Shim }) => ({
 	// },
 	middleware: [
 		// ExternalMiddleware(ctx => externals.has(ctx.packageId)),
-		// BundleMiddleware()
+		// UnionMiddleware()
 	]
 });

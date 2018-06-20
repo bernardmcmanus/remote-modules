@@ -21,7 +21,7 @@ import NormalResource from './types/normal';
 import NullResource from './types/null';
 import ExternalResource from './types/external';
 import ContextFactory, { getManifestPath } from '../context';
-import BundleFactory from '../bundle';
+import UnionFactory from '../union';
 import manifestGenerator from '../generators/manifest';
 import { getAdapter } from './adapters';
 
@@ -45,7 +45,7 @@ export function isResource(value) {
 
 export default function ResourceFactory(options) {
 	const contextFactory = new ContextFactory(options);
-	const bundleFactory = new BundleFactory(options);
+	const unionFactory = new UnionFactory(options);
 	const C = ConfigStore.from(options);
 	const outputPath = Path.join(C.outputDir, '.__resources__.json');
 	const { logger } = C;
@@ -63,7 +63,7 @@ export default function ResourceFactory(options) {
 			adapter,
 			logger,
 			contextFactory,
-			bundleFactory,
+			unionFactory,
 			// eslint-disable-next-line no-use-before-define
 			resourceFactory: factory,
 			options: omit(C, ['logger'])
@@ -179,7 +179,7 @@ export default function ResourceFactory(options) {
 		isNull,
 		isExternal,
 		contextFactory,
-		bundleFactory,
+		unionFactory,
 		failed: {
 			value: false,
 			writable: true
@@ -243,7 +243,7 @@ export default function ResourceFactory(options) {
 						const dependency = factory(requestObject, resource);
 						resource.addDependency(requestObject, dependency);
 						if (missingRequests.has(requestObject) && dependency.isNull()) {
-							resource.removeFromBundle();
+							resource.removeFromUnion();
 							resource.markDirty();
 						}
 					});
@@ -268,7 +268,7 @@ export default function ResourceFactory(options) {
 					}
 				}
 			} else {
-				bundleFactory.cache.clear();
+				unionFactory.cache.clear();
 				contextFactory.uncache();
 				readPackage.cache.clear();
 				createResource.cache.clear();
