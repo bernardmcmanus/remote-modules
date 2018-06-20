@@ -1,6 +1,6 @@
 import React from 'react';
 import Router from 'universal-router';
-import ImportClient from 'remote-module';
+import ImportClient from 'remote-modules';
 
 import Main from './Main';
 

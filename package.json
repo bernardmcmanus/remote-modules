@@ -1,18 +1,18 @@
 {
-  "name": "remote-module",
+  "name": "remote-modules",
   "version": "0.33.0",
   "license": "MIT",
   "description": "Universal remote module manager",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bernardmcmanus/remote-module.git"
+    "url": "https://github.com/bernardmcmanus/remote-modules.git"
   },
   "author": {
     "name": "Bernard McManus",
     "email": "bernard.mcmanus.iv@gmail.com",
     "url": "https://github.com/bernardmcmanus"
   },
-  "homepage": "https://github.com/bernardmcmanus/remote-module",
+  "homepage": "https://github.com/bernardmcmanus/remote-modules",
   "keywords": [
     "javascript",
     "universal",
@@ -27,7 +27,7 @@
   "engineStrict": true,
   "main": "dist/client/index.js",
   "bin": {
-    "remote-module": "dist/cli/index.js"
+    "remote-modules": "dist/cli/index.js"
   },
   "scripts": {
     "build": "yarn run build:browser && yarn run build:node",

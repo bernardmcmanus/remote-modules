@@ -22,7 +22,7 @@ export default class Main extends PureComponent {
 	render() {
 		return (
 			<Fragment>
-				<Helmet titleTemplate="%s | remote-module">
+				<Helmet titleTemplate="%s | remote-modules">
 					<title>Home</title>
 				</Helmet>
 				<header>
