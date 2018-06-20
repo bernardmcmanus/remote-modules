@@ -7,7 +7,7 @@
   "module": "index.mjs",
   "browser": "index.browser.js",
   "scripts": {
-    "postinstall": "npm run relay",
+    "postinstall": "yarn run relay",
     "relay": "relay-compiler --extensions js jsx --src component --schema schema.graphql"
   },
   "dependencies": {
@@ -45,7 +45,6 @@
     "react-dom": "^16.3.2",
     "react-helmet": "^5.2.0",
     "react-relay": "~1.4.1",
-    "relay-query-lookup-renderer": "~2.0.4",
     "relay-compiler": "~1.4.1",
     "slick-carousel": "^1.8.1",
     "styled-components": "^3.2.6",

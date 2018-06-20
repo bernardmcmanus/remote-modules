@@ -1,2 +1,4 @@
+.DS_Store
+yarn.lock
 .remote/
 node_modules/

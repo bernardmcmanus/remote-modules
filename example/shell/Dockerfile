@@ -1,11 +1,11 @@
 FROM remote-module/base as base
-FROM node:8
+FROM node:8-slim
 
 WORKDIR /src
 COPY --from=base /src/remote-module.tgz /
 COPY .npmrc package.json /src/
-RUN npm install
+RUN yarn install
 COPY . /src/
-RUN npm run build
+RUN yarn run build
 
 CMD ["node", "."]

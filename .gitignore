@@ -1,6 +1,8 @@
-node_modules/
-npm-debug.log
-coverage/
-dist/
+.DS_Store
 .nyc_output/
 .remote/
+node_modules/
+coverage/
+dist/
+npm-debug.log
+yarn-error.log
