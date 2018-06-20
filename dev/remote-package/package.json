@@ -1,7 +1,7 @@
 {
   "name": "remote-package",
   "version": "0.1.0",
-  "description": "remote module test package",
+  "description": "remote modules test package",
   "license": "UNLICENSED",
   "main": "index.js",
   "module": "index.mjs",

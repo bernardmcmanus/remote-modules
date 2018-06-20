@@ -618,8 +618,8 @@ describe('Installer', () => {
 	 * FIXME: ADD A TEST FOR THIS!!
 	 * The following commands should be functionally equivalent
 	 * assuming there are no provided resources outside of root:
-	 * remote-module install --root dev/remote-package --force
-	 * remote-module install dev/remote-package --config dev/remote-package/.modulerc --force
+	 * remote-modules install --root dev/remote-package --force
+	 * remote-modules install dev/remote-package --config dev/remote-package/.modulerc --force
 	 */
 
 	it('should visit each resource exactly once during a fresh install', () =>

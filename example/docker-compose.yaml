@@ -3,7 +3,7 @@ services:
 
   base:
     build: ../
-    image: remote-module/base
+    image: remote-modules/base
     tty: true
 
   fragment-a:
@@ -11,7 +11,7 @@ services:
       context: ./fragment
       args:
         - FRAGMENT_NAME=a
-    image: remote-module/fragment-a
+    image: remote-modules/fragment-a
     depends_on:
       - base
     env_file:
@@ -23,7 +23,7 @@ services:
       context: ./fragment
       args:
         - FRAGMENT_NAME=b
-    image: remote-module/fragment-b
+    image: remote-modules/fragment-b
     depends_on:
       - base
     env_file:
@@ -32,7 +32,7 @@ services:
 
   shell:
     build: ./shell
-    image: remote-module/shell
+    image: remote-modules/shell
     depends_on:
       - base
     env_file:
