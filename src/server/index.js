@@ -376,12 +376,12 @@ export default function Server(options) {
 		const c = C.use(scope);
 		const scopeLogger = logger.child({ name: c.scopeKey });
 		const install = new Installer(c);
-		return async (...args) => {
-			const { resourceFactory } = await install(...args);
+		return async (force, ...other) => {
+			const { resourceFactory } = await install(force, ...other);
 			if (c.watch) {
 				watcher.subscribe(resourceFactory, async events => {
 					events.forEach(([, resource]) => resource.markDirty());
-					await install(...args);
+					await install(false, ...other);
 				});
 				watcher.on('error', err => {
 					scopeLogger.error(err.frame || err);
