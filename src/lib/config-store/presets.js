@@ -9,10 +9,6 @@ export default preset => {
 		case 'node':
 			return {
 				define: {
-					// 'process.arch': process.arch,
-					// 'process.platform': process.platform,
-					// 'process.title': process.title,
-					// 'process.version': process.version,
 					'process.browser': false,
 					'typeof window': 'undefined',
 					'typeof document': 'undefined',
