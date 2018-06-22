@@ -69,20 +69,27 @@ export default (api, { logger, resource }) => {
 	function replaceRequest(path) {
 		const request = generateResourceRequest(path.node, buildQuery);
 		switch (true) {
-			case isRequireResolve(path): {
-				const ctx = resource.contextFactory(request, resource.getResolverPaths());
-				if (ctx.isNull()) {
+			case isRequireResolve(path):
+				if (request.dynamic) {
 					path.replaceWith(
-						moduleNotFoundTemplate({
-							MODULE: moduleIdentifier,
-							REQUEST: request.node
-						})
+						t.CallExpression(t.MemberExpression(moduleIdentifier, t.Identifier('resolveDynamic')), [
+							request.node
+						])
 					);
 				} else {
-					path.replaceWith(t.StringLiteral(ctx.moduleId));
+					const ctx = resource.contextFactory(request, resource.getResolverPaths());
+					if (ctx.isNull()) {
+						path.replaceWith(
+							moduleNotFoundTemplate({
+								MODULE: moduleIdentifier,
+								REQUEST: request.node
+							})
+						);
+					} else {
+						path.replaceWith(t.StringLiteral(ctx.moduleId));
+					}
 				}
 				break;
-			}
 			case request.async:
 				if (request.dynamic) {
 					path.replaceWith(
