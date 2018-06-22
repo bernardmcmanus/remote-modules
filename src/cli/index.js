@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'child_process';
+import { inspect } from 'util';
 
 import yargs from 'yargs';
 
@@ -9,7 +10,7 @@ import Installer from '../server/installer';
 import ConfigStore from '../lib/config-store';
 import logger from '../lib/logger';
 import pick from '../lib/helpers/pick';
-import { pickDefined } from '../lib/helpers';
+import { omit, pickDefined } from '../lib/helpers';
 import { normalizeArrayOption, toPrimitive } from './helpers';
 
 const C = new ConfigStore();
@@ -20,12 +21,6 @@ function commonOptionsBuilder(program) {
 			describe: 'Install entrypoint',
 			type: 'string',
 			defaultDescription: C.defaults.entry
-		})
-		.option('config', {
-			alias: 'c',
-			describe: 'Path to a .modulerc file',
-			type: 'string',
-			defaultDescription: C.defaults.config
 		})
 		.option('define', {
 			alias: 'd',
@@ -67,23 +62,11 @@ function commonOptionsBuilder(program) {
 			type: 'string',
 			defaultDescription: C.defaults.output
 		})
-		.option('preset', {
-			alias: 'p',
-			describe: 'Load target presets',
-			type: 'string',
-			defaultDescription: C.defaults.preset
-		})
 		.option('root', {
 			alias: 'r',
 			describe: 'Project root',
 			type: 'string',
 			defaultDescription: C.defaults.root
-		})
-		.option('scope', {
-			alias: 's',
-			describe: 'Config scope for multiple build variants',
-			type: 'string',
-			default: undefined
 		})
 		.option('strict', {
 			describe: 'Fail on missing dependency',
@@ -167,6 +150,39 @@ function commonOptionsParser(argv, extras = []) {
 
 yargs
 	.usage('Usage: $0 <command> [options]')
+	.help()
+	.option('scope', {
+		alias: 's',
+		describe: 'Config scope',
+		type: 'string',
+		default: undefined
+	})
+	.option('config', {
+		alias: 'c',
+		describe: 'Path to a .modulerc file',
+		type: 'string',
+		defaultDescription: C.defaults.config
+	})
+	.option('preset', {
+		alias: 'p',
+		describe: 'Load target presets',
+		type: 'string',
+		defaultDescription: C.defaults.preset
+	})
+	.command({
+		command: 'print-config [options]',
+		desc: 'Display the assembled config object(s)',
+		handler: async argv => {
+			const { scope, ...options } = commonOptionsParser(argv);
+			C.init(options);
+			(scope ? [scope] : C.scopes()).forEach(symbol => {
+				logger.info(
+					{ name: ConfigStore.symbolOf(symbol) },
+					`\n${inspect(omit(C.use(symbol), ['scopeKey', 'core']), { colors: true, depth: null })}\n`
+				);
+			});
+		}
+	})
 	.command({
 		command: 'install [entry] [options]',
 		desc: 'Prep the code you want to serve remotely',
@@ -259,5 +275,4 @@ yargs
 		}
 	})
 	.wrap(Math.min(100, yargs.terminalWidth()))
-	.help()
 	.parse();
