@@ -1,5 +1,6 @@
 import get from '../../../../lib/helpers/get';
 import noop from '../../../../lib/helpers/noop';
+import RawAdapter from './raw';
 import Reader from './reader';
 import Writer from './writer';
 
@@ -16,7 +17,7 @@ function getDefaultVisitors(visitors = {}) {
 }
 
 export function getAdapter(C, ctx) {
-	const { adapter } = C.adapters.find(({ test }) => test(ctx));
+	const { adapter = RawAdapter } = C.adapters.find(({ test }) => test(ctx)) || {};
 	return adapter(C, ctx);
 }
 

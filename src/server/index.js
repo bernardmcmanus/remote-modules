@@ -22,8 +22,6 @@ import Watcher from './installer/watcher';
 
 import timingMiddleware from './middleware/timing';
 
-import pkg from '../../package.json';
-
 // eslint-disable-next-line no-process-env
 const ENV = process.env.BUILD_ENV || process.env.NODE_ENV || process.env.BABEL_ENV;
 
@@ -340,9 +338,9 @@ function createServer(routers) {
 		});
 	}
 
-	appRouter.get('/up/', async ctx => {
+	appRouter.get('/up/', ctx => {
 		ctx.state.noLog = true;
-		ctx.body = `${pkg.version} ${pkg.name}`;
+		ctx.body = 'OK';
 	});
 
 	routers.forEach(scopeRouter => {

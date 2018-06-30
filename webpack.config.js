@@ -26,7 +26,6 @@ export default {
 	mode: production(NODE_ENV) || 'development',
 	resolve: {
 		alias: {
-			fs$: Path.resolve('src/client/shims/fs'),
 			url$: Path.resolve('src/client/shims/url'),
 			vm$: Path.resolve('src/client/shims/vm')
 		}

@@ -18,7 +18,7 @@ export default preset => {
 		case 'browser':
 			return {
 				core: mapObject(defaultCore, () => false),
-				mainFields: ['browser', 'module', 'main'],
+				mainFields: ['browser'],
 				define: {
 					'process.browser': true,
 					'typeof window': 'object',
@@ -31,6 +31,7 @@ export default preset => {
 					Buffer: `import { Buffer } from '${ConfigStore.mocks.buffer}'`
 				},
 				middleware: [
+					// Rewrite requests for node core modules to browser shims
 					RewriteMiddleware(
 						new RegExp(
 							`^(${Object.keys(ConfigStore.shims)
