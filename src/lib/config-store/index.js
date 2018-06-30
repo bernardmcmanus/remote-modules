@@ -19,6 +19,12 @@ import getDefaults from './defaults';
 import getPreset from './presets';
 import * as middleware from './middleware';
 
+import ScriptAdapter from '../../server/installer/resource/adapters/default';
+import JSONAdapter from '../../server/installer/resource/adapters/json';
+import LESSAdapter from '../../server/installer/resource/adapters/less';
+import CSSAdapter from '../../server/installer/resource/adapters/css';
+import RawAdapter from '../../server/installer/resource/adapters/raw';
+
 export default class ConfigStore {
 	static getCalculated = getCalculated;
 
@@ -36,6 +42,8 @@ export default class ConfigStore {
 		} = process;
 		return BUILD_ENV || NODE_ENV || 'development';
 	});
+
+	static adapters = { ScriptAdapter, JSONAdapter, LESSAdapter, CSSAdapter, RawAdapter };
 
 	static shims = mapObject(
 		browserShims,
@@ -71,6 +79,7 @@ export default class ConfigStore {
 		return typeof result === 'function'
 			? result({
 					...middleware,
+					...ConfigStore.adapters,
 					Scope: ConfigStore.symbolFor,
 					Shim: key => {
 						if (!Object.hasOwnProperty.call(ConfigStore.shims, key)) {

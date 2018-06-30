@@ -1,5 +1,8 @@
 export default class Registry {
-	constructor(ttl = 3e5 /* 5m */) {
+	constructor(ttl) {
+		if (typeof ttl !== 'number') {
+			throw new Error('ttl is required');
+		}
 		this.ttl = ttl;
 	}
 

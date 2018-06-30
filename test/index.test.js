@@ -341,8 +341,10 @@ describe('ConfigStore', () => {
 			Object.entries(presetOpts).forEach(([key, value]) => {
 				switch (true) {
 					case key === 'mainFields':
+						assert.deepEqual(c.mainFields, [...value, ...c.defaults.mainFields]);
+						break;
 					case key === 'provide':
-						assert.deepEqual(c[key], value);
+						assert.deepEqual(c.provide, value);
 						break;
 					case key === 'middleware': {
 						const middlewareNames = c.middleware.map(fn => fn.name);
@@ -2315,7 +2317,7 @@ describe('Client', () => {
 	it('should optionally share a registry between loader instances', () =>
 		getServer(async server => {
 			await server.install();
-			const registry = new Registry();
+			const registry = new Registry(3e5);
 			return getClient(
 				async client => {
 					assert.strictEqual(
@@ -2761,50 +2763,56 @@ describe('RemoteLoader', () => {
 	});
 
 	it('should never load the same module twice', () =>
-		getServer(async server => {
-			await server.install();
-			return getLoader(async loader => {
-				const moduleGroupGetters = [
-					() => [
-						loader.import(),
-						loader.import(':'),
-						loader.import('.'),
-						loader.import(':.'),
-						loader.import('./'),
-						loader.import(':./'),
-						loader.import('./index'),
-						loader.import(':./index'),
-						loader.import('./index.js'),
-						loader.import(':./index.js')
-					],
-					() => [
-						loader.import('react'),
-						loader.import('react/index'),
-						loader.import('react/index.js'),
-						loader.import('./index').then(({ React }) => React)
-					],
-					() => [
-						loader.import('react-helmet'),
-						loader.import('react-helmet/lib/Helmet'),
-						loader.import('react-helmet/lib/Helmet.js'),
-						loader.import('./index.js').then(({ ReactHelmet }) => ReactHelmet)
-					]
-				];
+		getServer(
+			async server => {
+				await server.install();
+				return getLoader(async loader => {
+					const moduleGroupGetters = [
+						() => [
+							loader.import(),
+							loader.import(':'),
+							loader.import('.'),
+							loader.import(':.'),
+							loader.import('./'),
+							loader.import(':./'),
+							loader.import('./index'),
+							loader.import(':./index'),
+							loader.import('./index.js'),
+							loader.import(':./index.js')
+						],
+						() => [
+							loader.import('react'),
+							loader.import('react/index'),
+							loader.import('react/index.js'),
+							loader.import('./index').then(({ React }) => React)
+						],
+						() => [
+							loader.import('react-helmet'),
+							loader.import('react-helmet/lib/Helmet'),
+							loader.import('react-helmet/lib/Helmet.js'),
+							loader.import('./index.js').then(({ ReactHelmet }) => ReactHelmet)
+						]
+					];
 
-				// Make sure these are all fetched concurrently
-				await Promise.all(moduleGroupGetters.reduce((acc, fn) => [...acc, ...fn()], []));
+					// Make sure these are all fetched concurrently
+					await Promise.all(moduleGroupGetters.reduce((acc, fn) => [...acc, ...fn()], []));
 
-				await Promise.all(
-					moduleGroupGetters.map(async fn => {
-						const modules = await Promise.all(fn());
-						while (modules.length > 1) {
-							const args = [modules.shift(), modules[0]];
-							assert.strictEqual(...args);
-						}
-					})
-				);
-			});
-		}));
+					await Promise.all(
+						moduleGroupGetters.map(async fn => {
+							const modules = await Promise.all(fn());
+							while (modules.length > 1) {
+								const args = [modules.shift(), modules[0]];
+								assert.strictEqual(...args);
+							}
+						})
+					);
+				});
+			},
+			{
+				...baseInstallerOptions,
+				mainFields: ['main']
+			}
+		));
 
 	it('should handle baseURLs other than /', () =>
 		getServer(async server => {
