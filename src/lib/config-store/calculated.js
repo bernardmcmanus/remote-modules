@@ -15,7 +15,7 @@ export default opts => {
 
 	const define = {
 		'process.env.NODE_ENV':
-			opts.define['process.env.BUILD_ENV'] || opts.define['process.env.NODE_ENV'] || opts.env,
+			opts.define['process.env.NODE_ENV'] || opts.define['process.env.BUILD_ENV'] || opts.env,
 		...pickDefined(opts.define)
 	};
 

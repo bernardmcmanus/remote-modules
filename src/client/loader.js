@@ -32,9 +32,8 @@ export default class RemoteLoader {
 		context = createContext(global),
 		externalRequire = getDefaultExternalRequire(this),
 		forceLoad = ENV === 'development',
-		ttl = forceLoad ? 0 : undefined,
-		registry = new Registry(ttl),
-		...other
+		ttl = forceLoad ? 0 : 3e5 /* 5m */,
+		registry = new Registry(ttl)
 	}) {
 		if (!uri) {
 			throw new Error('uri is required');
@@ -57,7 +56,7 @@ export default class RemoteLoader {
 			}
 		);
 
-		Object.assign(this, { baseURL, ...other });
+		Object.assign(this, { baseURL });
 
 		defineProperties(this, {
 			context,

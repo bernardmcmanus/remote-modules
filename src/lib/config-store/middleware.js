@@ -25,10 +25,10 @@ class Middleware {
 	fn = (...args) => (this.test(...args) ? this.apply(...args) : undefined);
 }
 
-export function GenericMiddleware(...args) {
+export function ContextMiddleware(...args) {
 	return new Middleware({
 		type: 'context',
-		name: 'GenericMiddleware',
+		name: 'ContextMiddleware',
 		...Middleware.parseArgs(args)
 	});
 }
@@ -64,6 +64,17 @@ export function RewriteMiddleware(...args) {
 
 export function NullMiddleware(test) {
 	return RewriteMiddleware(test, () => null);
+}
+
+export function ResourceMiddleware(...args) {
+	const { test, apply } = Middleware.parseArgs(args);
+	return new Middleware({
+		type: 'resource',
+		name: 'ResourceMiddleware',
+		test: (resource, ctx) =>
+			resource.isNormal() && resource.adapter.outputType !== 'raw' && test(resource, ctx),
+		apply
+	});
 }
 
 export const UnionMiddleware = (() => {

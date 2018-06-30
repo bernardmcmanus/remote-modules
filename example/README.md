@@ -17,13 +17,13 @@ That's it! Any of the services listed in the [development compose file](docker-c
 
 ## High Level Architecture
 
-* User requests `/:fragment` _(red)_
-* `Nginx` routes the request to `Shell` _(red)_
-* `Shell` makes a remote import call to `Fragment [A/B]` _(green)_
-* `Shell` executes the imported modules from `Fragment [A/B]` and returns the rendered page
-* Requests for static assets are routed through `Nginx` to the appropriate container _(blue)_
+- User requests `/:fragment` _(red)_
+- `Nginx` routes the request to `Shell` _(red)_
+- `Shell` makes a remote import call to `Fragment [A/B]` _(green)_
+- `Shell` executes the imported modules from `Fragment [A/B]` and returns the rendered page
+- Requests for static assets are routed through `Nginx` to the appropriate container _(blue)_
 
 <div align="center">
-	<br />
-	<img width="450" src="../docs/request-flow.svg" title="Request Flow" alt="Request Flow">
+  <br />
+  <img width="450" src="../docs/request-flow.svg" title="Request Flow" alt="Request Flow">
 </div>

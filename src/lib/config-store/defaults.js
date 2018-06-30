@@ -1,11 +1,5 @@
 import noop from '../helpers/noop';
 
-import DefaultAdapter from '../../server/installer/resource/adapters/default';
-import RawAdapter from '../../server/installer/resource/adapters/raw';
-import JSONAdapter from '../../server/installer/resource/adapters/json';
-import LESSAdapter from '../../server/installer/resource/adapters/less';
-import CSSAdapter from '../../server/installer/resource/adapters/css';
-
 import { defaultCore, defaultExtensions, defaultMainFields, defaultModuleDirs } from '../resolver';
 import { isAbsoluteURL } from '../helpers';
 import { ExternalMiddleware } from './middleware';
@@ -13,30 +7,27 @@ import ConfigStore from './';
 
 export default function getDefaults(key) {
 	switch (key) {
-		case 'adapters':
+		case 'adapters': {
+			const { CSSAdapter, LESSAdapter, JSONAdapter, ScriptAdapter } = ConfigStore.adapters;
 			return [
-				{
-					test: ctx => ctx.extension === '.less',
-					adapter: LESSAdapter
-				},
 				{
 					test: ctx => ctx.extension === '.css',
 					adapter: CSSAdapter
+				},
+				{
+					test: ctx => ctx.extension === '.less',
+					adapter: LESSAdapter
 				},
 				{
 					test: ctx => ctx.extension === '.json',
 					adapter: JSONAdapter
 				},
 				{
-					// FIXME: RawAdapter should be default
-					test: ctx => !defaultExtensions.includes(ctx.extension),
-					adapter: RawAdapter
-				},
-				{
-					test: () => true,
-					adapter: DefaultAdapter
+					test: ctx => defaultExtensions.includes(ctx.extension),
+					adapter: ScriptAdapter
 				}
 			];
+		}
 		case 'babylon':
 			return {
 				sourceType: 'module',
@@ -45,6 +36,7 @@ export default function getDefaults(key) {
 					'classProperties',
 					'dynamicImport',
 					'exportDefaultFrom',
+					'exportNamespaceFrom',
 					'jsx',
 					'objectRestSpread'
 				]
@@ -58,7 +50,7 @@ export default function getDefaults(key) {
 		case 'uglify':
 			return {
 				compress: {
-					// https://github.com/mishoo/UglifyJS2/issues/2941
+					// https://github.com/mishoo/UglifyJS2/issues/2874
 					inline: false
 				},
 				output: {

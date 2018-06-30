@@ -14,7 +14,7 @@ export const defaultCore = moduleResolver.core;
 
 export const defaultExtensions = Object.freeze(['.js', '.jsx', '.mjs', '.es', '.es6', '.json']);
 
-export const defaultMainFields = Object.freeze(['main']);
+export const defaultMainFields = Object.freeze(['module', 'main']);
 
 export const defaultModuleDirs = Object.freeze(['node_modules']);
 

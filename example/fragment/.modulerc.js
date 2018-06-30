@@ -9,7 +9,7 @@ const externals = new Set([
 	'universal-router'
 ]);
 
-module.exports = ({ Scope, ExternalMiddleware, GenericMiddleware, UnionMiddleware }) => ({
+module.exports = ({ Scope, ContextMiddleware, ExternalMiddleware, UnionMiddleware }) => ({
 	define: {
 		'process.env.FRAGMENT_NAME': FRAGMENT_NAME
 	},
@@ -48,7 +48,7 @@ module.exports = ({ Scope, ExternalMiddleware, GenericMiddleware, UnionMiddlewar
 			 * (i.e. ./node_modules/react/index.js) instead
 			 * of unresolved package requests (i.e. react).
 			 */
-			GenericMiddleware(
+			ContextMiddleware(
 				ctx => externals.has(ctx.packageId),
 				ctx => {
 					ctx.external = true;
