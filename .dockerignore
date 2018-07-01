@@ -1,6 +1,0 @@
-Dockerfile
-.git/
-.remote/
-dist/
-example/
-node_modules/

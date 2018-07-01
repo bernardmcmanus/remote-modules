@@ -30,7 +30,7 @@
     "react": "^16.4.0",
     "react-dom": "^16.4.0",
     "react-helmet": "^5.2.0",
-    "remote-modules": "file:/remote-modules.tgz",
+    "remote-modules": "latest",
     "serialize-javascript": "^1.5.0",
     "universal-router": "^6.0.0"
   },
