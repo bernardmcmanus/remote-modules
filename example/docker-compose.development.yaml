@@ -7,8 +7,9 @@ services:
       - NODE_ENV=development
     volumes:
       - ./fragment:/src
-      - /src/.remote
-      - /src/node_modules
+      - ./fragment/.remote/a:/src/.remote
+      - /src/node_modules/dtrace-provider
+      - /src/node_modules/fsevents
 
   fragment-b:
     command: yarn start
@@ -16,8 +17,9 @@ services:
       - NODE_ENV=development
     volumes:
       - ./fragment:/src
-      - /src/.remote
-      - /src/node_modules
+      - ./fragment/.remote/b:/src/.remote
+      - /src/node_modules/dtrace-provider
+      - /src/node_modules/fsevents
 
   shell:
     command: yarn start
@@ -25,4 +27,5 @@ services:
       - NODE_ENV=development
     volumes:
       - ./shell:/src
-      - /src/node_modules
+      - /src/node_modules/dtrace-provider
+      - /src/node_modules/fsevents
