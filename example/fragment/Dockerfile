@@ -1,9 +1,7 @@
-FROM remote-modules/base as base
 FROM node:8-slim
 
 WORKDIR /src
-COPY --from=base /src/remote-modules.tgz /
-COPY .npmrc package.json /src/
+COPY .npmrc package.json yarn.lock /src/
 RUN yarn install
 COPY . /src/
 
