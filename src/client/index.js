@@ -20,7 +20,7 @@ export default class Client {
 	]);
 
 	static hasScope(namespace) {
-		return /(?:^|.+\/)@[\w/]+$/.test(namespace);
+		return /(?:^|.+\/)@.+$/.test(namespace);
 	}
 
 	// Matches ^(<(namespace/)?@scope>)?

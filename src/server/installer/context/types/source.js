@@ -7,11 +7,10 @@ import { assembleResourceURL } from '../../../../lib/url-builder';
 import { isCore } from '../../../../lib/resolver';
 
 export default class SourceContext extends Map {
-	constructor(req, baseDir, factory, options) {
-		const originalRequest = (req && req.value) || req;
+	constructor(requestObject, baseDir, factory, C) {
+		const { value: originalRequest } = requestObject;
 
 		super([
-			['async', Boolean(req.async)],
 			['dirty', false],
 			['error', undefined],
 			['external', undefined],
@@ -20,13 +19,14 @@ export default class SourceContext extends Map {
 			['resolved', undefined]
 		]);
 
-		defineProperties(this, { baseDir, factory, options, originalRequest });
+		defineProperties(this, { baseDir, C, factory, originalRequest });
 
-		this.request = originalRequest;
+		this.request = requestObject.value;
+		this.requestObject = requestObject;
 	}
 
 	get async() {
-		return this.get('async');
+		return Boolean(this.requestObject.async);
 	}
 
 	get dirty() {
@@ -80,8 +80,15 @@ export default class SourceContext extends Map {
 	}
 
 	get url() {
-		const { options, moduleId } = this;
-		return this.isExternal() ? moduleId : assembleResourceURL(options.server.publicPath, moduleId);
+		const { C, moduleId, requestObject } = this;
+		switch (true) {
+			case this.isExternal():
+				return moduleId;
+			case requestObject.static:
+				return Path.join(C.getRoot().server.publicPath, '@static', moduleId);
+			default:
+				return assembleResourceURL(C.server.publicPath, moduleId);
+		}
 	}
 
 	set external(value) {
@@ -136,11 +143,21 @@ export default class SourceContext extends Map {
 		return this.resolved === null;
 	}
 
+	isNormal() {
+		return !this.isExternal() && !this.isNull();
+	}
+
 	inspect() {
-		const descriptors = Object.getOwnPropertyDescriptors(SourceContext.prototype);
+		const descriptors = {
+			...Object.getOwnPropertyDescriptors(SourceContext.prototype),
+			...Object.getOwnPropertyDescriptors(this)
+		};
 		const result = {};
 		for (const [key, { value }] of Object.entries(descriptors)) {
 			switch (true) {
+				case key === 'C':
+					// noop
+					break;
 				case key === 'error':
 					result.error = this.error && this.error.message;
 					break;
