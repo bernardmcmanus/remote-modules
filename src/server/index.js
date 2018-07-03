@@ -290,14 +290,15 @@ function createScopeRouter(C, watcher) {
 		} catch (err) {
 			if (err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND') {
 				throw err;
+			} else if (!ctx.state.rewrite) {
+				ctx.status = 404;
+				ctx.body = {
+					message: `Cannot find module '${ctx.path}'`,
+					status: 404,
+					code: 'MODULE_NOT_FOUND',
+					path: ctx.path
+				};
 			}
-			ctx.status = 404;
-			ctx.body = {
-				message: `Cannot find module '${ctx.path}'`,
-				status: 404,
-				code: 'MODULE_NOT_FOUND',
-				path: ctx.path
-			};
 		}
 	});
 
@@ -322,9 +323,10 @@ function createScopeRouter(C, watcher) {
 	return new Router().use(`/${C.scopeKey}`, router.routes(), router.allowedMethods());
 }
 
-function createServer(routers) {
+function createServer(C, watcher) {
 	const app = new Koa();
 	const appRouter = new Router();
+	const basePublicPath = C.getRoot().get(['server', 'publicPath']);
 	let statusCounts;
 
 	if (ENV === 'test') {
@@ -343,7 +345,21 @@ function createServer(routers) {
 		ctx.body = 'OK';
 	});
 
-	routers.forEach(scopeRouter => {
+	C.scopes().forEach(scope => {
+		const c = C.use(scope);
+		const publicPath = c.get(['server', 'publicPath']);
+		const scopeRouter = createScopeRouter(c, watcher);
+
+		appRouter.get(Path.join(basePublicPath, '/@static/:request(.*)'), async (ctx, next) => {
+			ctx.path = assembleResourceURL({ pathname: publicPath }, ctx.params.request);
+			ctx.state.rewrite = true;
+			await scopeRouter.routes()(ctx, next);
+			if (ctx.status === 404) {
+				ctx.url = ctx.originalUrl;
+				await next();
+			}
+		});
+
 		appRouter.use('(.*)', scopeRouter.routes(), scopeRouter.allowedMethods());
 	});
 
@@ -400,8 +416,7 @@ export default function Server(options) {
 
 	function listen(port = C.server.port) {
 		if (!server) {
-			const routers = C.scopes().map(scope => createScopeRouter(C.use(scope), watcher));
-			({ app, server, statusCounts } = createServer(routers));
+			({ app, server, statusCounts } = createServer(C, watcher));
 		}
 		return new Promise(resolve => {
 			server.listen(port, resolve);

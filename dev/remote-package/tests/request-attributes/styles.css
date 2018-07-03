@@ -1,0 +1,11 @@
+.no-attributes {
+	background-image: url(./images/css-href.gif);
+}
+
+.href {
+	background-image: url(<href>./images/css-href.gif);
+}
+
+.static {
+	background-image: url(<static>./images/css-href.gif);
+}
