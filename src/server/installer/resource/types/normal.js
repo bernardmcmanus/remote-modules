@@ -92,10 +92,7 @@ export default class NormalResource {
 			isInstalledPackage: () => contextFactory.isInstalledPackage(this.slug)
 		});
 
-		Object.assign(
-			this,
-			pick(ctx, ['error', 'moduleId', 'origin', 'packageId', 'pid', 'slug', 'url'])
-		);
+		Object.assign(this, pick(ctx, ['error', 'moduleId', 'origin', 'packageId', 'pid', 'slug']));
 	}
 
 	size = -1;

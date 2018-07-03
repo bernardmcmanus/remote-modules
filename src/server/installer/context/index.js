@@ -6,6 +6,7 @@ import { isCore, resolveSync } from '../../../lib/resolver';
 import { isAbsolutePath, isAbsoluteURL, matches } from '../../../lib/helpers';
 import defineProperties from '../../../lib/helpers/defineProperties';
 import escapeRegExp from '../../../lib/helpers/escapeRegExp';
+import get from '../../../lib/helpers/get';
 import last from '../../../lib/helpers/last';
 import memoize from '../../../lib/helpers/memoize';
 import ConfigStore from '../../../lib/config-store';
@@ -53,7 +54,7 @@ export function slugToAbsolutePath(baseDir, slug) {
 export default function ContextFactory(options) {
 	const C = ConfigStore.from(options);
 	const cacheKeyResolver = (request, baseDir) =>
-		`${(request && request.value) || request}:${baseDir}`;
+		[get(request, ['attributes']), get(request, ['value']) || request, baseDir].join(':');
 
 	const contextualResolve = memoize((request, baseDir) => {
 		let resolved;
@@ -89,7 +90,8 @@ export default function ContextFactory(options) {
 	}, cacheKeyResolver);
 
 	function factory(request, resolverPaths = [undefined]) {
-		if (typeof request !== 'string' && !request.value) {
+		const requestObject = typeof request === 'string' ? { value: request } : request;
+		if (!requestObject || !requestObject.value) {
 			throw new Error(`Expected String or Object({ value: String }) but got '${inspect(request)}'`);
 		}
 		if (!Array.isArray(resolverPaths)) {
@@ -97,7 +99,7 @@ export default function ContextFactory(options) {
 		}
 		let ctx;
 		for (const baseDir of resolverPaths) {
-			ctx = createContext(request, baseDir);
+			ctx = createContext(requestObject, baseDir);
 			if (ctx.resolved) {
 				break;
 			}
