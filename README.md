@@ -278,21 +278,25 @@ Also notice the `< ... >` in the import request - this is the request format for
 
 ## Request Attributes
 
-Request attributes are primarily used to reference static assets from within script files. Consider a project with the following structure:
+Request attributes are primarily used to reference static assets. Consider a project with the following structure:
 
 ```
 project
 ├─┬ src
 │ ├── index.jsx
 │ └── styles.css
-└─┬ static
+└─┬ img
   └── image.jpg
 ```
 
 __src/styles.css__
 ```css
-.image {
-  background-image: url(../static/image.jpg);
+.image-scoped {
+  background-image: url(../img/image.jpg);
+}
+
+.image-static {
+  background-image: url(<static>../img/image.jpg);
 }
 ```
 
@@ -305,20 +309,26 @@ import './styles.css';
 export default function MyComponent() {
   return (
     <div>
-      <img src={import('<href>../static/image.jpg')} />
-      <div className="image" />
+      <img src={import('<href>../img/image.jpg')} />
+      <img src={import('<static>../img/image.jpg')} />
+      <div className="image-scoped" />
+      <div className="image-static" />
     </div>
   );
 }
 ```
 
-The `href` attribute tells the compiler that this particular `import(...)` call should be replaced with the asset URL at compile time. Note the `<href>` is NOT needed to reference assets from stylesheets. The output might look something like:
+Both the `href` and `static` attributes tell the compiler that these `import(...)` calls should be replaced with URLs. `href` will be transformed to a scoped URL, and `static` will always be transformed to the same URL regardless of scope. Note the `<href>` is implied when referencing assets from stylesheets. The output might look something like:
 ```js
 function MyComponent() {
-  return _react.default.createElement("div", null, _react.default.createElement("img", {
-    src: "/@scope/static/image.jpg"
-  }), _react.default.createElement("div", {
-    className: "image"
+  return React.createElement("div", null, React.createElement("img", {
+    src: "/@scope/_/:./img/image.jpg"
+  }), React.createElement("img", {
+    src: "/@static/img/image.jpg"
+  }), React.createElement("div", {
+    className: "image-scoped"
+  }), React.createElement("div", {
+    className: "image-static"
   }));
 }
 ```

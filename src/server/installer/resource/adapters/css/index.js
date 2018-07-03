@@ -3,6 +3,7 @@ import Writer from '../writer';
 import DefaultAdapter from '../default';
 import { createAdapter } from '../';
 import escapeRegExp from '../../../../../lib/helpers/escapeRegExp';
+import { parseAttributes } from '../../../../../lib/request-attributes';
 
 export default (C, ctx) => {
 	const defaultAdapter = DefaultAdapter(C, ctx);
@@ -12,16 +13,16 @@ export default (C, ctx) => {
 		visitors: {
 			Requests: {
 				post: resource => {
-					const requestMap = resource.getDependenciesByRequest();
-					resource.requests.forEach(({ type, value }) => {
-						const dependency = requestMap.get(value);
+					resource.requests.forEach(request => {
+						const requestCtx = resource.contextFactory(request, resource.getResolverPaths());
+						const { attributes, type, value } = request;
 						switch (type) {
 							case 'import': {
 								const nodes = resource.adapter.parser.runQuery(`
 									// ${type} [ @import =~ '${escapeRegExp(value)}' ]
 								`);
 								nodes.forEach(node => {
-									if (dependency.isNormal()) {
+									if (requestCtx.isNormal()) {
 										// Drop import statements for normal resources
 										const { rules } = node.parent.stylesheet;
 										const index = rules.indexOf(node);
@@ -31,21 +32,19 @@ export default (C, ctx) => {
 								break;
 							}
 							default: {
-								const regexp = new RegExp(`(^|\\([\\'\\"]?)${escapeRegExp(value)}([\\'\\"]?\\)|$)`);
+								const regexp = new RegExp(
+									`(^|\\([\\'\\"]?)(?:<.+>)?${escapeRegExp(value)}([\\'\\"]?\\)|$)`
+								);
 								const nodes = resource.adapter.parser.runQuery(`
 									// ${type} [ @value =~ '${regexp.source}' ]
 								`);
-								if (dependency.isNormal()) {
-									nodes.forEach(node => {
+								nodes.forEach(node => {
+									const { list } = parseAttributes(node.value);
+									if (attributes === list || (attributes && attributes.includes(list))) {
 										// eslint-disable-next-line no-param-reassign
-										node.value = node.value.replace(regexp, `$1${dependency.url}$2`);
-									});
-								} else if (dependency.isExternal()) {
-									nodes.forEach(node => {
-										// eslint-disable-next-line no-param-reassign
-										node.value = node.value.replace(regexp, `$1${dependency.moduleId}$2`);
-									});
-								}
+										node.value = node.value.replace(regexp, `$1${requestCtx.url}$2`);
+									}
+								});
 								break;
 							}
 						}
