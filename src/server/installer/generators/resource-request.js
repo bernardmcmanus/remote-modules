@@ -1,7 +1,11 @@
 import * as t from '@babel/types';
 import traverse from '@babel/traverse';
 
-import { pickBy } from '../../../lib/helpers';
+import {
+	formatAttributes,
+	parseAttributes,
+	stripAttributes
+} from '../../../lib/request-attributes';
 import defineProperties from '../../../lib/helpers/defineProperties';
 import get from '../../../lib/helpers/get';
 import once from '../../../lib/helpers/once';
@@ -16,27 +20,15 @@ function isImport(path) {
 	);
 }
 
-function formatAttributes(attributes) {
-	const keys = Object.keys(pickBy(attributes, Boolean));
-	return keys.length ? `<${keys.join(',')}>` : undefined;
-}
-
-function parseAttributes(path, remove) {
-	const attributes = {};
-	const regexp = /^(?:<([^>]+)>)?/;
+function parseRequestPath(path) {
 	const { value } = path.node;
-	const [, attributesList] = value.match(regexp);
-	if (attributesList) {
-		attributesList.split(',').forEach(key => {
-			attributes[key] = true;
-		});
-		if (remove) {
-			path.replaceWith(t.StringLiteral(value.replace(regexp, '')));
-		}
+	const { list, attributes } = parseAttributes(value);
+	if (list) {
+		path.replaceWith(t.StringLiteral(stripAttributes(value)));
 	}
 	return {
 		...attributes,
-		async: (isImport(path) && !attributesList) || attributes.async
+		async: (isImport(path) && !list) || attributes.async
 	};
 }
 
@@ -74,7 +66,7 @@ function requestToGlob(requestNode, variables) {
 
 	traverse(rootNode, {
 		StringLiteral: once(path => {
-			parseAttributes(path, true);
+			parseRequestPath(path);
 		}),
 		Expression(path) {
 			if (!t.isLiteral(path.node)) {
@@ -113,7 +105,7 @@ export default (originalRequestNode, buildQuery) => {
 
 	traverse(rootNode, {
 		StringLiteral: once(path => {
-			Object.assign(attributes, parseAttributes(path, true));
+			Object.assign(attributes, parseRequestPath(path));
 		}),
 		Expression(path) {
 			if (

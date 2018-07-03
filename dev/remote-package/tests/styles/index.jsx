@@ -16,8 +16,6 @@ function Styles() {
 				<h2>This is styled with LESS!</h2>
 				<div className="logo" />
 			</div>
-			<img src={import('<href>./images/static.gif')} />
-			<img src={import(`<href>./images/dynamic/${Math.round(Math.random())}.gif`)} />
 		</Fragment>
 	);
 }
