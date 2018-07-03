@@ -1585,6 +1585,77 @@ describe('Server', () => {
 				assert.equal(res.status, 404);
 			});
 		}));
+
+	it('should load static assets from the first scope where they exist', () => {
+		const c = new ConfigStore({
+			...baseInstallerOptions,
+			[ConfigStore.symbolFor('tests/request-attributes/node')]: {
+				entry: 'tests/request-attributes',
+				preset: 'node',
+				extensions: ['.css', '.less']
+			},
+			[ConfigStore.symbolFor('tests/request-attributes/browser')]: {
+				entry: 'tests/request-attributes',
+				preset: 'browser',
+				extensions: ['.css', '.less'],
+				server: {
+					static: ['dist/client.browser.js?(.map)']
+				}
+			}
+		});
+
+		return getServer(async server => {
+			await server.install();
+
+			// sanity check
+			let error;
+			await got(
+				`${
+					c.use('tests/request-attributes/browser').server.uri
+				}/_/:./tests/request-attributes/images/static.gif`
+			);
+			try {
+				await got(
+					`${
+						c.use('tests/request-attributes/node').server.uri
+					}/_/:./tests/request-attributes/images/static.gif`
+				);
+			} catch (err) {
+				error = err;
+			}
+			assert.equal(error.statusCode, 404);
+			server.statusCounts.clear();
+
+			await getWindow(
+				`${c.use('tests/request-attributes/browser').server.uri}/browser?auto=false`,
+				async window => window.client.import(window.IMPORT_REQUEST)
+			);
+
+			await getLoader(
+				async loader => {
+					const html = await loader.import();
+					[loader.resolveURL('./tests/request-attributes/images/dynamic/')].forEach(value => {
+						assert(html.includes(value), `Expected html to include '${value}'`);
+					});
+
+					const { body: css } = await got(
+						loader.resolveURL('./tests/request-attributes/styles.css')
+					);
+					[
+						Url.parse(loader.resolveURL('./tests/request-attributes/images/css-href.gif')).pathname,
+						'/@static/tests/request-attributes/images/css-href.gif'
+					].forEach(value => {
+						assert(css.includes(value), `Expected css to include '${value}'`);
+					});
+				},
+				{
+					uri: c.use('tests/request-attributes/node').server.uri
+				}
+			);
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
+		}, c);
+	});
 });
 
 describe('Watcher', () => {

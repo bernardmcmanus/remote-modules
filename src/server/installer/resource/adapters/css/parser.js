@@ -3,6 +3,11 @@ import ASTQ from 'astq';
 
 import Parser from '../parser';
 import get from '../../../../../lib/helpers/get';
+import {
+	formatAttributes,
+	parseAttributes,
+	stripAttributes
+} from '../../../../../lib/request-attributes';
 
 const astq = new ASTQ();
 
@@ -67,9 +72,18 @@ export default () =>
 				]
 					.reduce((acc, request) => {
 						if (request.value) {
-							const value = request.value.replace(/["']/g, '');
-							if (value && !acc.has(value)) {
-								acc.set(value, { ...request, value, key: value });
+							const { attributes } = parseAttributes(request.value);
+							const value = stripAttributes(request.value.replace(/["']/g, ''));
+							const attributesString = formatAttributes(attributes);
+							const key = [attributesString, value].join('');
+							if (value && !acc.has(key)) {
+								acc.set(key, {
+									...request,
+									...attributes,
+									attributes: attributesString,
+									value,
+									key
+								});
 							}
 						}
 						return acc;

@@ -38,7 +38,7 @@ export default (api, { logger, resource }) => {
 		logger.warn(`${resource.moduleId}:\n\n${frame}\n`);
 	}
 
-	function replaceStatic(path, request) {
+	function replaceDefault(path, request) {
 		const ctx = resource.contextFactory(request, resource.getResolverPaths());
 		switch (true) {
 			case Boolean(ctx.error):
@@ -133,7 +133,7 @@ export default (api, { logger, resource }) => {
 				);
 				break;
 			default:
-				replaceStatic(path, request);
+				replaceDefault(path, request);
 				break;
 		}
 	}

@@ -13,7 +13,7 @@ export default function Fragment() {
 				<title>{title}</title>
 			</Helmet>
 			<h1>{title}</h1>
-			<Image preload src={import(`<href>../../static/${process.env.FRAGMENT_NAME}.png`)} />
+			<Image preload src={import(`<static>../../static/${process.env.FRAGMENT_NAME}.png`)} />
 		</div>
 	);
 }
