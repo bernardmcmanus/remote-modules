@@ -1,5 +1,10 @@
+import { isDataURL } from '../../../../lib/helpers';
 import once from '../../../../lib/helpers/once';
 import NormalResource from './normal';
+
+function truncateDataURL(value) {
+	return isDataURL(value) && value.length >= 100 ? `${value.slice(0, 80)}\u2026` : value;
+}
 
 export default class ExternalResource extends NormalResource {
 	getSourceChecksum = once(() => this.sourceChecksum);
@@ -11,7 +16,7 @@ export default class ExternalResource extends NormalResource {
 	}
 
 	traverse() {
-		this.logger.debug(`Skipped external resource '${this.moduleId}'`);
+		this.logger.debug(`Skipped external resource '${truncateDataURL(this.moduleId)}'`);
 		this.dirty = false;
 		this.loaded = true;
 	}
