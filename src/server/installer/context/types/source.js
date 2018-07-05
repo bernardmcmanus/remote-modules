@@ -100,6 +100,7 @@ export default class SourceContext extends Map {
 	set force(value) {
 		if (this.get('force') !== value) {
 			this.set('force', value);
+			this.request = value;
 		}
 	}
 

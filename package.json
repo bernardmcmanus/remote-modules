@@ -1,6 +1,6 @@
 {
-  "name": "remote-modules",
-  "version": "0.34.0",
+  "name": "@clipper/remote-modules",
+  "version": "0.34.1",
   "license": "MIT",
   "description": "A module manager for distributed applications",
   "repository": {
@@ -92,7 +92,7 @@
     "koa-conditional-get": "^2.0.0",
     "koa-etag": "^3.0.0",
     "koa-router": "^7.2.1",
-    "less": "^3.0.1",
+    "less": "^2.3.1 || ^3.0.0",
     "mkdirp": "^0.5.1",
     "node-libs-browser": "^2.1.0",
     "object-hash": "^1.3.0",

@@ -61,7 +61,7 @@ export default () =>
 				[
 					...this.runQuery('// import').map(node => ({ type: node.type, value: node.import })),
 					...this.runQuery('// declaration').reduce((acc, node) => {
-						const urlRegExp = /url\(["']?([^)]+)["']?\)/gi;
+						const urlRegExp = /url\(["']?([^\s]+)["']?\)/gi;
 						let value;
 						// eslint-disable-next-line no-cond-assign, no-sequences
 						while ((([, value] = urlRegExp.exec(node.value) || []), value)) {
