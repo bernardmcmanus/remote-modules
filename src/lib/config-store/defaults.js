@@ -1,7 +1,7 @@
 import noop from '../helpers/noop';
 
 import { defaultCore, defaultExtensions, defaultMainFields, defaultModuleDirs } from '../resolver';
-import { isAbsoluteURL } from '../helpers';
+import { isAbsoluteURL, isDataURL } from '../helpers';
 import { ExternalMiddleware } from './middleware';
 import ConfigStore from './';
 
@@ -88,7 +88,7 @@ export default function getDefaults(key) {
 					// Treat absolute URIs as external resources
 					ExternalMiddleware(ctx => isAbsoluteURL(ctx.request)),
 					// Treat data URIs as external resources
-					ExternalMiddleware(/^data:\w+/i)
+					ExternalMiddleware(ctx => isDataURL(ctx.request))
 				],
 				server: {
 					port: 3000,
