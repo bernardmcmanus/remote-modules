@@ -50,7 +50,7 @@ export default (C, ctx) => {
 								install(_, pluginManager) {
 									pluginManager.addFileManager(new ImportManager(resource));
 								},
-								minVersion: [3, 0, 0]
+								minVersion: [2, 3, 1]
 							}
 						]
 					});

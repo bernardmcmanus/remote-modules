@@ -57,6 +57,10 @@ export function isAbsoluteURL(path) {
 	return Boolean(path && /^(\w+:)?\/\//.test(path));
 }
 
+export function isDataURL(path) {
+	return Boolean(path && /^data:\w+/i.test(path));
+}
+
 export function isAbsolutePath(path) {
 	return Boolean(path && /^\/([^/]|$)/.test(path));
 }
