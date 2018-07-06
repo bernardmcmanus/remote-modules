@@ -104,7 +104,7 @@ export default class NormalResource {
 	getOptionsChecksum = once(() => {
 		const { define, provide } = this.mutations;
 		const summableOptions = {
-			...this.options,
+			...omit(this.options, ['watch']),
 			define: mapObject(define, (_, key) => this.options.define[key]),
 			provide: mapObject(provide, (_, key) => this.options.provide[key])
 		};
