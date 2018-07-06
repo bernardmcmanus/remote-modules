@@ -1,6 +1,6 @@
 {
   "name": "remote-modules",
-  "version": "0.34.1",
+  "version": "0.34.2",
   "license": "MIT",
   "description": "A module manager for distributed applications",
   "repository": {
