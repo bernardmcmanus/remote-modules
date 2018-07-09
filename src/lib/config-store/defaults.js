@@ -8,7 +8,13 @@ import ConfigStore from './';
 export default function getDefaults(key) {
 	switch (key) {
 		case 'adapters': {
-			const { CSSAdapter, LESSAdapter, JSONAdapter, ScriptAdapter } = ConfigStore.adapters;
+			const {
+				CSSAdapter,
+				LESSAdapter,
+				SASSAdapter,
+				JSONAdapter,
+				ScriptAdapter
+			} = ConfigStore.adapters;
 			return [
 				{
 					test: ctx => ctx.extension === '.css',
@@ -17,6 +23,10 @@ export default function getDefaults(key) {
 				{
 					test: ctx => ctx.extension === '.less',
 					adapter: LESSAdapter
+				},
+				{
+					test: ctx => ctx.extension === '.sass' || ctx.extension === '.scss',
+					adapter: SASSAdapter
 				},
 				{
 					test: ctx => ctx.extension === '.json',

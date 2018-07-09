@@ -22,6 +22,7 @@ import * as middleware from './middleware';
 import ScriptAdapter from '../../server/installer/resource/adapters/default';
 import JSONAdapter from '../../server/installer/resource/adapters/json';
 import LESSAdapter from '../../server/installer/resource/adapters/less';
+import SASSAdapter from '../../server/installer/resource/adapters/sass';
 import CSSAdapter from '../../server/installer/resource/adapters/css';
 import RawAdapter from '../../server/installer/resource/adapters/raw';
 
@@ -43,7 +44,14 @@ export default class ConfigStore {
 		return BUILD_ENV || NODE_ENV || 'development';
 	});
 
-	static adapters = { ScriptAdapter, JSONAdapter, LESSAdapter, CSSAdapter, RawAdapter };
+	static adapters = {
+		ScriptAdapter,
+		JSONAdapter,
+		SASSAdapter,
+		LESSAdapter,
+		CSSAdapter,
+		RawAdapter
+	};
 
 	static shims = mapObject(
 		browserShims,
