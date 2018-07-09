@@ -654,7 +654,7 @@ describe('Installer', () => {
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
-				extensions: ['.css', '.less'],
+				extensions: ['.css', '.less', '.sass', '.scss'],
 				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
@@ -721,7 +721,7 @@ describe('Installer', () => {
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
-				extensions: ['.css', '.less'],
+				extensions: ['.css', '.less', '.sass', '.scss'],
 				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
@@ -759,7 +759,7 @@ describe('Installer', () => {
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
-				extensions: ['.css', '.less'],
+				extensions: ['.css', '.less', '.sass', '.scss'],
 				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
@@ -817,7 +817,7 @@ describe('Installer', () => {
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
-				extensions: ['.css', '.less'],
+				extensions: ['.css', '.less', '.sass', '.scss'],
 				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');
@@ -1642,8 +1642,9 @@ describe('Server', () => {
 						loader.resolveURL('./tests/request-attributes/styles.css')
 					);
 					[
-						Url.parse(loader.resolveURL('./tests/request-attributes/images/css-href.gif')).pathname,
-						'/@static/tests/request-attributes/images/css-href.gif'
+						Url.parse(loader.resolveURL('./tests/request-attributes/images/stylesheet-href.gif'))
+							.pathname,
+						'/@static/tests/request-attributes/images/stylesheet-static.gif'
 					].forEach(value => {
 						assert(css.includes(value), `Expected css to include '${value}'`);
 					});
@@ -2507,7 +2508,7 @@ describe('Client', () => {
 		const c = new ConfigStore({
 			...baseInstallerOptions,
 			entry: 'tests/styles',
-			extensions: ['.css', '.less']
+			extensions: ['.css', '.less', '.sass', '.scss']
 		}).use();
 
 		function countScripts(html) {
@@ -2904,7 +2905,7 @@ describe('RemoteLoader', () => {
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'browser',
-				extensions: ['.css', '.less'],
+				extensions: ['.css', '.less', '.sass', '.scss'],
 				server: {
 					static: ['dist/client.browser.js?(.map)']
 				}
@@ -2914,7 +2915,7 @@ describe('RemoteLoader', () => {
 		async function assertions(window) {
 			await window.client.import(window.IMPORT_REQUEST);
 			const { manifest } = await window.client.use(c.scopeKey).load();
-			assert.equal(window.document.head.querySelectorAll('link[rel=stylesheet]').length, 5);
+			assert.equal(window.document.head.querySelectorAll('link[rel=stylesheet]').length, 7);
 			// Make sure dynamic imports were not added to the manifest
 			assert(
 				!manifest.exists('react-dom/index.js'),
@@ -2955,7 +2956,7 @@ describe('RemoteLoader', () => {
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'browser',
-				extensions: ['.css', '.less'],
+				extensions: ['.css', '.less', '.sass', '.scss'],
 				middleware: [UnionMiddleware()],
 				server: {
 					static: ['dist/client.browser.js?(.map)']
@@ -3006,7 +3007,7 @@ describe('RemoteLoader', () => {
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
-				extensions: ['.css', '.less']
+				extensions: ['.css', '.less', '.sass', '.scss']
 			}
 		}).use('tests/styles');
 
@@ -3033,7 +3034,7 @@ describe('RemoteLoader', () => {
 			[ConfigStore.symbolFor('tests/styles')]: {
 				entry: 'tests/styles',
 				preset: 'node',
-				extensions: ['.css', '.less'],
+				extensions: ['.css', '.less', '.sass', '.scss'],
 				middleware: [UnionMiddleware()]
 			}
 		}).use('tests/styles');

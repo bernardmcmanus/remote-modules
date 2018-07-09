@@ -4,6 +4,8 @@ import React, { Fragment } from 'react';
 
 import './styles.css';
 import './styles.less';
+import './styles.sass';
+import './styles.scss';
 
 function Styles() {
 	return (
@@ -14,6 +16,14 @@ function Styles() {
 			</div>
 			<div className="less">
 				<h2>This is styled with LESS!</h2>
+				<div className="logo" />
+			</div>
+			<div className="sass">
+				<h2>This is styled with SASS!</h2>
+				<div className="logo" />
+			</div>
+			<div className="scss">
+				<h2>This is styled with SCSS!</h2>
 				<div className="logo" />
 			</div>
 		</Fragment>
