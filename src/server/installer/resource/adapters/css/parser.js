@@ -59,9 +59,12 @@ export default () =>
 		getRequests() {
 			return Array.from(
 				[
-					...this.runQuery('// import').map(node => ({ type: node.type, value: node.import })),
+					...this.runQuery('// import').map(node => {
+						const [, value] = /^(?:url\()?["']?([^\s"')]+)["']?\)?$/i.exec(node.import);
+						return { type: node.type, value };
+					}),
 					...this.runQuery('// declaration').reduce((acc, node) => {
-						const urlRegExp = /url\(["']?([^\s]+)["']?\)/gi;
+						const urlRegExp = /url\(["']?([^\s"']+)["']?\)/gi;
 						let value;
 						// eslint-disable-next-line no-cond-assign, no-sequences
 						while ((([, value] = urlRegExp.exec(node.value) || []), value)) {
