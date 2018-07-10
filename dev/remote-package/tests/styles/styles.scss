@@ -1,24 +1,23 @@
-@import (css) 'https://fonts.googleapis.com/css?family=Open+Sans';
+@import 'https://fonts.googleapis.com/css?family=Open+Sans';
 
-@import (inline) 'slick-carousel/slick/slick-theme.css';
 @import 'slick-carousel/slick/slick-theme.css';
-@import 'slick-carousel/slick/slick-theme.less';
-@import 'lesshat/lesshat';
+@import 'slick-carousel/slick/slick-theme.scss';
 
-@import (less) './common.css';
-@import (css) './less-as-css.less';
+@import './common';
+@import url('./common');
+@import '<href>./common';
+@import '<static>./common';
 
 @font-face {
 	font-family: 'Open Sans';
-	src: url('./open_sans_400_normal.woff2') format('woff2');
+	src: url(./open_sans_400_normal.woff2) format('woff2');
 	font-weight: 400;
 }
 
-.less {
-	.box-shadow(0 0 10px 3px magenta);
-	.rectangle;
+.scss {
+	@extend .rectangle;
 	font-family: slick, 'Open Sans', arial, sans-serif;
-	background-color: dodgerblue;
+	background-color: greenyellow;
 }
 
 .base64-encoded-url {

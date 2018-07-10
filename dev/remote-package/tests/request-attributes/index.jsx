@@ -5,6 +5,8 @@ import ReactDOMServer from 'react-dom/server';
 import ReactDOMServerBrowser from 'react-dom/server.browser';
 
 import './styles.css';
+import './styles.less';
+import './styles.scss';
 
 function RequestAttributes() {
 	return (

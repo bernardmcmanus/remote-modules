@@ -196,6 +196,10 @@ There are two types of middleware: `ContextMiddleware` Runs _before_ the resourc
     adapter: LESSAdapter
   },
   {
+    test: ctx => ctx.extension === '.sass' || ctx.extension === '.scss',
+    adapter: SASSAdapter
+  },
+  {
     test: ctx => ctx.extension === '.json',
     adapter: JSONAdapter
   },
