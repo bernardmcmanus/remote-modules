@@ -28,7 +28,6 @@ module.exports = {
 		[
 			require.resolve('./node_modules/@babel/plugin-transform-runtime'),
 			{
-				polyfill: false,
 				regenerator: false
 			}
 		]

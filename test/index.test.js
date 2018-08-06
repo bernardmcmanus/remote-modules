@@ -284,7 +284,7 @@ describe('ConfigStore', () => {
 				case key === 'babel':
 					assert.deepEqual(value, {
 						...c.defaults.babel,
-						envName: process.env.BABEL_ENV
+						envName: process.env.BABEL_ENV || env
 					});
 					break;
 				case key === 'define':
@@ -961,10 +961,10 @@ describe('Installer', () => {
 	it('should honor babelrc hierarchy', () => {
 		const c = new ConfigStore({
 			...baseInstallerOptions,
-			[ConfigStore.symbolFor('component')]: {
-				entry: 'component'
+			[ConfigStore.symbolFor('tests/relay')]: {
+				entry: 'tests/relay'
 			}
-		}).use('component');
+		}).use('tests/relay');
 
 		return getServer(async server => {
 			await server.install();
