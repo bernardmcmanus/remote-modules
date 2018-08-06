@@ -9,7 +9,7 @@ import glob from 'glob';
 import UglifyJS from 'uglify-es';
 import cloneDeep from 'clone-deep';
 import merge from 'deepmerge';
-import babelMerge from 'babel-merge/src';
+import babelMerge from 'babel-merge';
 
 import Parser from '../parser';
 import generateResourceRequest from '../../../generators/resource-request';
