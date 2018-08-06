@@ -1,6 +1,6 @@
 {
   "name": "remote-modules",
-  "version": "0.35.1",
+  "version": "0.35.2",
   "license": "MIT",
   "description": "A module manager for distributed applications",
   "repository": {
@@ -35,16 +35,15 @@
     "build:node": "NODE_ENV=${NODE_ENV:-production} babel src --copy-files --out-dir dist --source-maps inline",
     "clean": "rimraf .nyc_output coverage dist .remote",
     "format": "prettier --write '**/*.{js,json,css,jsx,mjs}'",
-    "lint": "eslint . --ext js",
-    "mocha": "BABEL_ENV=test BUILD_ENV=test nyc mocha -r @babel/register --timeout 60000 --bail",
+    "lint": "eslint .",
     "prebuild": "yarn run clean",
     "precommit": "lint-staged",
     "prepublishOnly": "yarn run build",
-    "pretest": "cd dev/remote-package && yarn install && cd - && yarn run lint",
+    "pretest": "yarn run lint && cd dev/remote-package && yarn install && cd -",
     "start": "NODE_ENV=${NODE_ENV:-development} nodemon --require @babel/register ./dev/server.js",
-    "test": "NODE_ENV=test yarn run build && LOG_LVL=warn yarn run unit",
+    "test": "NODE_ENV=test yarn run build && BABEL_ENV=test LOG_LVL=warn nyc yarn run unit",
     "toc": "markdown-toc -i README.md && node -e 'process.exit(0)'",
-    "unit": "yarn run mocha 'test/**/*.test.js'"
+    "unit": "BUILD_ENV=test mocha 'test/**/*.test.js' -r @babel/register --timeout 60000 --bail"
   },
   "lint-staged": {
     "*.js": [
