@@ -3,15 +3,19 @@
 ## Getting Started
 
 The example app is setup to run in production mode by default. You can start it by running:
-```shell
-docker-compose up -d
+```
+> docker-compose up -d
 ```
 
 Then open http://localhost.
 
-You can use the following command to run in development mode:
-```shell
-docker-compose -f docker-compose.yaml -f docker-compose.development.yaml up -d
+To run in development mode:
+```
+> cd fragment && yarn install && cd -
+
+> cd shell && yarn install && cd -
+
+> docker-compose -f docker-compose.yaml -f docker-compose.development.yaml up -d
 ```
 That's it! Any of the services listed in the [development compose file](docker-compose.development.yaml) will watch your local filesystem for changes. Changes you make locally will be reflected on the container, and the `remote-modules` client will re-fetch on every `import` call.
 
