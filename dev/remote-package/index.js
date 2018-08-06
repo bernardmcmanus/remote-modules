@@ -42,21 +42,6 @@ assert(
 require('core-js/es6/map');
 assert(require.cache[require.resolve('core-js/modules/es6.map')]);
 
-if (!process.browser) {
-	// nconf@0.7.2 attempts to call readdirSync in the module initializer which will
-	// throw if it's not overriden with this dummy that returns an empty array
-	const { readdirSync } = require('fs');
-	require('fs').readdirSync = () => [];
-	require('nconf');
-	Object.assign(require('fs'), { readdirSync });
-}
-
-// react / jsx / relay
-const { createElement } = require('react');
-const { renderToString } = require('react-dom/server');
-const html = renderToString(createElement(require('./component').default));
-assert(/<div class="test"/.test(html));
-
 // Relative / Resolved
 const foo = require('./foo');
 assert.strictEqual(foo, `${PACKAGE_NAME}/foo/index.js`);
