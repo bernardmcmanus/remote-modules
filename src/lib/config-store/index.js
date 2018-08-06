@@ -6,7 +6,7 @@ import glob from 'glob';
 import browserShims from 'node-libs-browser';
 import cloneDeep from 'clone-deep';
 import merge from 'deepmerge';
-import babelMerge from 'babel-merge/src';
+import babelMerge from 'babel-merge';
 
 import { resolveSync } from '../resolver';
 import { isPlainObject, mapObject, omit, pickDefined } from '../helpers';
