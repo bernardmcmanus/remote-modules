@@ -14,9 +14,6 @@ const scope = process.browser ? 'browser' : 'node';
 const routes = {
 	children: [
 		{
-			action: async ({ next }) => client.reset(next)
-		},
-		{
 			path: '/:fragment',
 			action: async (ctx, { fragment }) => {
 				const createElement = await client.import(`<${fragment}/@${scope}>`);
@@ -30,6 +27,9 @@ const routes = {
 				}
 				return createElement(ctx);
 			}
+		},
+		{
+			action: async ({ next }) => client.reset(next)
 		},
 		{
 			path: '/',

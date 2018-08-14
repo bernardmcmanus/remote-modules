@@ -11,7 +11,7 @@ options.uri | `{string}` | | The URI for the remote-modules server
 [options.context] | `{Object}` | `global` | The context in which modules will be executed
 [options.externalRequire] | `{Function}` | [`getDefaultExternalRequire()`](./loader.js) | The function used to require external modules
 [options.forceLoad] | `{boolean}` | `NODE_ENV === 'development'` | Request fresh content on every import call
-[options.ttl] | `{number}` | `forceLoad ? 0 : 3e5` | TTL (in ms) for cached modules
+[options.ttl] | `{number}` | browser: `Infinity`</br>node: `forceLoad ? 0 : 3e5 (node)` | TTL (in ms) for cached modules
 [options.registry] | `{Registry}` | `new Registry(ttl)` | The module registry
 
 ## client.import([request]) ⇒ `Promise<AsyncModule.exports>`
@@ -53,12 +53,20 @@ would return the following string:
 ```html
 <script src="/@default/_/prop-types/lib/ReactPropTypesSecret.js"></script>
 <script src="/@default/_/prop-types/checkPropTypes.js"></script>
-<script src="/@default/_/react/node_modules/fbjs/lib/emptyFunction.js"></script>
-<script src="/@default/_/react/node_modules/fbjs/lib/warning.js"></script>
-<script src="/@default/_/react/node_modules/fbjs/lib/emptyObject.js"></script>
-<script src="/@default/_/react/node_modules/fbjs/lib/invariant.js"></script>
+<script src="/@default/_/fbjs/lib/emptyFunction.js"></script>
+<script src="/@default/_/fbjs/lib/warning.js"></script>
+<script src="/@default/_/fbjs/lib/emptyObject.js"></script>
+<script src="/@default/_/fbjs/lib/invariant.js"></script>
 <script src="/@default/_/object-assign/index.js"></script>
-<script src="/@default/_/react/cjs/react.development.js"></script>
+<script src="/@default/_/react/cjs/react.production.min.js"></script>
 <script src="/@default/_/react/index.js" data-module-id="react/index.js" data-pid="682820962" data-main></script>
 <script data-module-id="react/index.js" type="application/json">{...}</script>
 ```
+
+## client.reset([action]) ⇒ `Promise<any>`
+
+Used in browser to remove tags added by the previous `import` call. This is handled internally between imports, so you only need to call `reset` when you want to remove existing tags without replacing them. In node `reset` is a noop, but it will always return the result of `action`. See the example app [router](../../example/shell/src/app/router.js).
+
+Param | Type | Description
+----- | ---- | -----------
+[action] | `{function}` | The action to be performed prior to removing existing tags
