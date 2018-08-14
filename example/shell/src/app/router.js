@@ -14,6 +14,9 @@ const scope = process.browser ? 'browser' : 'node';
 const routes = {
 	children: [
 		{
+			action: async ({ next }) => client.reset(next)
+		},
+		{
 			path: '/:fragment',
 			action: async (ctx, { fragment }) => {
 				const createElement = await client.import(`<${fragment}/@${scope}>`);
@@ -36,11 +39,14 @@ const routes = {
 	action: async ctx => <Main {...ctx.store}>{await ctx.next()}</Main>
 };
 
-export default context =>
-	new Router(routes, {
-		context,
+export default initialContext => {
+	const router = new Router(routes, {
+		context: initialContext,
 		errorHandler: err => {
 			console.error(err.stack);
+			router.context.status = err.code || 500;
 			return err.code === 404 ? <h1>Not Found</h1> : <h1>Internal Server Error</h1>;
 		}
 	});
+	return router;
+};
