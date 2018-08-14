@@ -30,14 +30,20 @@ function Styles() {
 	);
 }
 
-module.exports = (async () => {
+module.exports = async () => {
 	if (process.browser) {
 		const ReactDOMServer = await import('react-dom/server.browser');
 		const html = ReactDOMServer.renderToString(<Styles />);
-		document.body.innerHTML += html;
+		let main = document.querySelector('#main');
+		if (!main) {
+			main = document.createElement('div');
+			main.id = 'main';
+			document.body.appendChild(main);
+		}
+		main.innerHTML = html;
 		return html;
 	} else {
 		const ReactDOMServer = await import('react-dom/server');
 		return ReactDOMServer.renderToString(<Styles />);
 	}
-})();
+};

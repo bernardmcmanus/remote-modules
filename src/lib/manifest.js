@@ -29,7 +29,6 @@ export default class Manifest {
 		lookupTable.set(meta.moduleId, meta);
 
 		this.lookupTable = lookupTable;
-		this.exclusions = new Set(internals.exclusions);
 	}
 
 	lookup(key) {
@@ -38,10 +37,6 @@ export default class Manifest {
 
 	exists(key) {
 		return this.lookupTable.has(key);
-	}
-
-	excluded(pid) {
-		return this.exclusions.has(pid);
 	}
 
 	getModuleId(key) {

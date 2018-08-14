@@ -61,7 +61,7 @@ export default class AsyncModule {
 				main,
 				external: false,
 				loaded: false,
-				initializer: null,
+				definition: null,
 				exports: {}
 			},
 			other
@@ -69,10 +69,17 @@ export default class AsyncModule {
 	}
 
 	load = once(async () => {
-		const { context, script, filename, dirname } = this;
-		const namespace = context !== global ? script.runInContext(context) : script.runInThisContext();
-		const wrapper = namespace[`pid:${this.pid}`];
-		this.initializer = await wrapper(this.exports, this.require, this, filename, dirname);
+		if (this.manifest) {
+			if (this.isMain) {
+				await this.loader.ensure(this);
+			}
+		} else {
+			const { context, script, filename, dirname } = this;
+			const namespace =
+				context !== global ? script.runInContext(context) : script.runInThisContext();
+			const wrapper = namespace[`pid:${this.pid}`];
+			await wrapper(this.exports, this.require, this, filename, dirname);
+		}
 		this.loaded = true;
 		return this;
 	});
@@ -96,38 +103,40 @@ export default class AsyncModule {
 		return this.loader.resolveURL(request, this);
 	}
 
-	exec() {
-		const { id, initializer, loaded } = this;
-		if (!loaded) {
-			throw new Error(`Attempted to initialize module ${id} before it was loaded`);
+	async define(meta, definition) {
+		this.definition = definition;
+		if (this.isMain) {
+			const json = await this.loader.getManifest(this.id);
+			this.manifest = Manifest.load(json);
+			await this.loader.ensure(this);
+		} else {
+			this.manifest = Manifest.derive(this.main.manifest, meta);
 		}
-		if (initializer) {
-			delete this.initializer;
+	}
+
+	exec() {
+		if (!this.loaded) {
+			throw new Error(`Attempted to initialize module ${this.id} before it was loaded`);
+		}
+		const { definition } = this;
+		if (definition) {
 			try {
-				initializer();
+				delete this.definition;
+				definition();
 			} catch (err) {
 				const error = AsyncModule.formatError(err);
-				this.initializer = () => {
+				this.definition = () => {
 					throw error;
 				};
-				this.initializer();
+				this.definition();
 			}
 		}
 		return this.exports;
 	}
 
-	async define(meta, initializer) {
-		const { loader } = this;
-		if (!this.manifest) {
-			if (this.isMain) {
-				const json = await loader.getManifest(this.id);
-				this.manifest = Manifest.load(json);
-				await loader.ensure(this);
-			} else {
-				this.manifest = Manifest.derive(this.main.manifest, meta);
-			}
-		}
-		return initializer;
+	reset() {
+		this.loaded = false;
+		this.load.clear();
 	}
 
 	trace() {

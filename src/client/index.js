@@ -10,15 +10,6 @@ import RemoteLoader from './loader';
 export default class Client {
 	static defaultScope = '@default';
 
-	static implements = Object.freeze([
-		'import',
-		'load',
-		'loadSync',
-		'resolve',
-		'resolveAsync',
-		'require'
-	]);
-
 	static hasScope(namespace) {
 		return /(?:^|.+\/)@.+$/.test(namespace);
 	}
@@ -34,13 +25,12 @@ export default class Client {
 	}
 
 	constructor({ context, ...other }) {
-		defineProperties(
-			this,
-			Client.implements.reduce((acc, method) => {
-				acc[method] = (...args) => this.__callLoaderMethod(method, args);
-				return acc;
-			}, {})
-		);
+		defineProperties(this, {
+			lastActiveLoader: {
+				value: undefined,
+				writable: true
+			}
+		});
 		Object.assign(this, {
 			options: {
 				context: context && (isContext(context) ? context : createContext(context)),
@@ -50,6 +40,18 @@ export default class Client {
 	}
 
 	loaders = new Map();
+
+	async reset(fn, nextNamespace) {
+		const { loaders, lastActiveLoader } = this;
+		let result;
+		if (lastActiveLoader && lastActiveLoader !== loaders.get(nextNamespace)) {
+			this.lastActiveLoader = null;
+			result = await lastActiveLoader.reset(fn);
+		} else if (fn) {
+			result = await fn();
+		}
+		return result;
+	}
 
 	async renderStatic(request, type) {
 		const ns = this.getNamespace(request);
@@ -84,13 +86,16 @@ export default class Client {
 			});
 			loaders.set(ns, loader);
 		}
+		this.lastActiveLoader = loader;
 		return loader;
 	}
 
-	__callLoaderMethod(method, args) {
+	import(...args) {
 		const ns = this.getNamespace(args[0]);
 		const xargs = Client.transformArgs(ns, args);
-		const loader = this.use(ns);
-		return loader[method].call(loader, ...xargs);
+		return this.reset(() => {
+			const loader = this.use(ns);
+			return loader.import(...xargs);
+		}, ns);
 	}
 }

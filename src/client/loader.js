@@ -32,7 +32,8 @@ export default class RemoteLoader {
 		context = createContext(global),
 		externalRequire = getDefaultExternalRequire(this),
 		forceLoad = ENV === 'development',
-		ttl = forceLoad ? 0 : 3e5 /* 5m */,
+		// eslint-disable-next-line no-nested-ternary
+		ttl = process.browser ? Infinity : forceLoad ? 0 : 3e5 /* 5m */,
 		registry = new Registry(ttl)
 	}) {
 		if (!uri) {
@@ -81,9 +82,9 @@ export default class RemoteLoader {
 		return this.getResourceURLFromID(moduleId, query);
 	}
 
-	async fetchManifestJSON(id) {
+	async fetchManifestJSON(id, query) {
 		const pathname = Path.join(this.baseURL.pathname, 'manifest', id);
-		const url = Url.format({ ...this.baseURL, pathname });
+		const url = Url.format({ ...this.baseURL, pathname, query });
 		const res = await this.fetch(url);
 		if (!res.ok) {
 			throw Object.assign(new Error(), await res.json());
@@ -94,7 +95,7 @@ export default class RemoteLoader {
 	}
 
 	getManifest(id) {
-		return this.transport.getManifestJSON(id) || this.fetchManifestJSON(id);
+		return this.transport.getManifestJSON(id);
 	}
 
 	async fetch(url, { method = 'GET', ...other } = {}) {
@@ -111,6 +112,24 @@ export default class RemoteLoader {
 
 	getFromContext(pid) {
 		return this.context[`pid:${pid}`];
+	}
+
+	async reset(fn) {
+		const predicate = this.transport.getResetPredicate();
+		let result;
+		if (predicate) {
+			// Browser only
+			this.registry.forEach(module => {
+				if (!module.external) {
+					module.reset();
+				}
+			});
+			result = fn && (await fn());
+			predicate();
+		} else if (fn) {
+			result = await fn();
+		}
+		return result;
 	}
 
 	register({ id, pid, ...other }) {
@@ -183,16 +202,19 @@ export default class RemoteLoader {
 						acc.set(assetId, moduleId);
 					}
 					return acc;
-				}, new Map())
+				}, new Map([[manifest.meta('assetId'), manifest.meta('moduleId')]]))
 				.values()
 		);
 
 		await Promise.all(moduleIds.map(id => this.load(id, entryModule)));
 
 		return Promise.all(
-			entryModule.manifest
-				.list()
-				.map(id => RemoteLoader.isExternal(id, entryModule) || this.load(id, entryModule))
+			manifest.list().reduce((acc, id) => {
+				if (manifest.getType(id) === 'js') {
+					acc.push(this.load(id, entryModule));
+				}
+				return acc;
+			}, [])
 		);
 	}
 
@@ -225,7 +247,7 @@ export default class RemoteLoader {
 	require(pid, parent) {
 		// eslint-disable-next-line no-sync
 		const module = this.loadSync(pid, parent);
-		if (!module && (!parent || !parent.manifest.excluded(pid))) {
+		if (!module && (!parent || parent.manifest.getType(pid) === 'js')) {
 			this._throwNotFound(this.resolve(pid, parent));
 		}
 		return module && module.exec();
