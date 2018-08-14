@@ -12,6 +12,7 @@ import stripAnsi from 'strip-ansi';
 import got from 'got';
 import { JSDOM } from 'jsdom';
 import { assert as chaiAssert } from 'chai';
+import sinon from 'sinon';
 
 import Server from '../src/server';
 import Installer from '../src/server/installer';
@@ -1559,7 +1560,7 @@ describe('Installer', () => {
 });
 
 describe('Server', () => {
-	it('should send module and pointer IDs in the response headers', () =>
+	it('should send moduleId, pid, and resource type in the response headers', () =>
 		getServer(async server => {
 			await server.install();
 			return getLoader(async loader => {
@@ -1571,6 +1572,7 @@ describe('Server', () => {
 						const { headers } = await loader.fetch(url);
 						assert.strictEqual(headers['x-module-id'], moduleId);
 						assert.strictEqual(Number(headers['x-pointer-id']), manifest.getPid(moduleId));
+						assert.strictEqual(headers['x-resource-type'], manifest.getType(moduleId));
 					})
 				);
 			});
@@ -2451,10 +2453,14 @@ describe('Client', () => {
 		const uri = `${C.getRoot().server.uri}${basePath}`;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
-			server: {
-				uri: `${uri}/test`
+			[ConfigStore.symbolFor('renderStatic')]: {
+				entry: 'tests/styles',
+				extensions: ['.css', '.less', '.sass', '.scss'],
+				server: {
+					uri: `${uri}/test`
+				}
 			}
-		}).use();
+		}).use('renderStatic');
 
 		return getServer(async server => {
 			await server.install();
@@ -2463,10 +2469,20 @@ describe('Client', () => {
 					const importRequest = `test/${c.scopeKey}`;
 					const namespace = `${basePath}/${importRequest}`;
 					const html = await client.renderStatic(`<${importRequest}>`);
-					const scripts = html.match(/(<script.+><\/script>)/g);
-					const regexp = new RegExp(`^<script.+src="${escapeRegExp(namespace)}/_/`);
-					scripts.forEach(script => {
-						assert(regexp.test(script), `Expected ${script} to match ${regexp}`);
+					const scripts = html.match(/(<script.+><\/script>)/g) || [];
+					const stylesheets = html.match(/(<link.+rel="stylesheet".*\/?>)/g) || [];
+
+					assert(scripts.length > 0, 'Expected scripts to have length > 0');
+					assert(stylesheets.length > 0, 'Expected stylesheets to have length > 0');
+
+					scripts.forEach(tag => {
+						const regexp = new RegExp(`^<script.+src="${escapeRegExp(namespace)}/_/`);
+						assert(regexp.test(tag), `Expected ${tag} to match ${regexp}`);
+					});
+
+					stylesheets.forEach(tag => {
+						const regexp = new RegExp(`^<link.+href="${escapeRegExp(namespace)}/_/`);
+						assert(regexp.test(tag), `Expected ${tag} to match ${regexp}`);
 					});
 				},
 				{ uri }
@@ -2480,11 +2496,15 @@ describe('Client', () => {
 		const { UnionMiddleware } = ConfigStore.middleware;
 		const c = new ConfigStore({
 			...baseInstallerOptions,
-			middleware: [UnionMiddleware()],
-			server: {
-				uri: `${uri}/test`
+			[ConfigStore.symbolFor('renderStatic')]: {
+				entry: 'tests/styles',
+				extensions: ['.css', '.less', '.sass', '.scss'],
+				middleware: [UnionMiddleware()],
+				server: {
+					uri: `${uri}/test`
+				}
 			}
-		}).use();
+		}).use('renderStatic');
 
 		return getServer(async server => {
 			await server.install();
@@ -2493,10 +2513,20 @@ describe('Client', () => {
 					const importRequest = `test/${c.scopeKey}`;
 					const namespace = `${basePath}/${importRequest}`;
 					const html = await client.renderStatic(`<${importRequest}>`);
-					const scripts = html.match(/(<script.+><\/script>)/g);
-					const regexp = new RegExp(`^<script.+src="${escapeRegExp(namespace)}/_/~/`);
-					scripts.forEach(script => {
-						assert(regexp.test(script), `Expected ${script} to match ${regexp}`);
+					const scripts = html.match(/(<script.+><\/script>)/g) || [];
+					const stylesheets = html.match(/(<link.+rel="stylesheet".*\/?>)/g) || [];
+
+					assert(scripts.length > 0, 'Expected scripts to have length > 0');
+					assert(stylesheets.length > 0, 'Expected stylesheets to have length > 0');
+
+					scripts.forEach(tag => {
+						const regexp = new RegExp(`^<script.+src="${escapeRegExp(namespace)}/_/~/`);
+						assert(regexp.test(tag), `Expected ${tag} to match ${regexp}`);
+					});
+
+					stylesheets.forEach(tag => {
+						const regexp = new RegExp(`^<link.+href="${escapeRegExp(namespace)}/_/~/`);
+						assert(regexp.test(tag), `Expected ${tag} to match ${regexp}`);
 					});
 				},
 				{ uri }
@@ -2534,6 +2564,74 @@ describe('Client', () => {
 				{ uri: c.server.uri }
 			);
 		}, c);
+	});
+
+	it('should not call loader.reset if there is no previous active loader', () => {
+		const c = new ConfigStore({
+			...baseInstallerOptions,
+			[ConfigStore.symbolFor('tests/circular')]: {
+				entry: 'tests/circular'
+			}
+		}).use('tests/circular');
+
+		return getDisposer(
+			stub =>
+				getServer(async server => {
+					await server.install();
+					await getClient(async client => {
+						await client.reset();
+						assert.equal(stub.callCount, 0);
+					});
+				}, c),
+			() => sinon.stub(RemoteLoader.prototype, 'reset'),
+			stub => stub.restore()
+		);
+	});
+
+	it('should call loader.reset if the next loader is NOT the same as the previous', () => {
+		const c = new ConfigStore({
+			...baseInstallerOptions,
+			[ConfigStore.symbolFor('tests/circular')]: {
+				entry: 'tests/circular'
+			}
+		}).use('tests/circular');
+
+		return getDisposer(
+			stub =>
+				getServer(async server => {
+					await server.install();
+					await getClient(async client => {
+						await client.import(`<a/${c.scopeKey}>`);
+						await client.import(`<b/${c.scopeKey}>`);
+						assert.equal(stub.callCount, 1);
+					});
+				}, c),
+			() => sinon.stub(RemoteLoader.prototype, 'reset'),
+			stub => stub.restore()
+		);
+	});
+
+	it('should NOT call loader.reset if the next loader is the same as the previous', () => {
+		const c = new ConfigStore({
+			...baseInstallerOptions,
+			[ConfigStore.symbolFor('tests/circular')]: {
+				entry: 'tests/circular'
+			}
+		}).use('tests/circular');
+
+		return getDisposer(
+			stub =>
+				getServer(async server => {
+					await server.install();
+					await getClient(async client => {
+						await client.import(`<${c.scopeKey}>`);
+						await client.import(`<${c.scopeKey}>`);
+						assert.equal(stub.callCount, 0);
+					});
+				}, c),
+			() => sinon.stub(RemoteLoader.prototype, 'reset'),
+			stub => stub.restore()
+		);
 	});
 });
 
@@ -2912,36 +3010,80 @@ describe('RemoteLoader', () => {
 			}
 		}).use('tests/styles');
 
-		async function assertions(window) {
-			await window.client.import(window.IMPORT_REQUEST);
-			const { manifest } = await window.client.use(c.scopeKey).load();
-			assert.equal(window.document.head.querySelectorAll('link[rel=stylesheet]').length, 7);
-			// Make sure dynamic imports were not added to the manifest
-			assert(
-				!manifest.exists('react-dom/index.js'),
-				'Expected manifest to not include react-dom/index.js'
-			);
+		function getAssertionsPredicate(expectedCounts) {
+			return async ({ client, document, IMPORT_REQUEST }) => {
+				function countStylesheets() {
+					return document.querySelectorAll(
+						'style[data-remote-modules],link[data-remote-modules][rel=stylesheet]'
+					).length;
+				}
+
+				function countScripts() {
+					return document.querySelectorAll('script[data-remote-modules]').length;
+				}
+
+				assert.equal(countStylesheets(), expectedCounts.css.initial);
+				assert.equal(countScripts(), expectedCounts.js.initial + expectedCounts.json.initial);
+
+				await client.import(IMPORT_REQUEST).then(render => render());
+
+				assert.equal(countStylesheets(), expectedCounts.css.final);
+				assert.equal(countScripts(), expectedCounts.js.final + expectedCounts.json.final);
+
+				// Make sure dynamic imports were not added to the manifest
+				const { manifest } = await client.use(c.scopeKey).load();
+				assert(
+					!manifest.exists('react-dom/index.js'),
+					'Expected manifest to not include react-dom/index.js'
+				);
+			};
 		}
 
 		return getServer(async server => {
-			await server.install();
+			const [main] = await server.install();
+			const resources = [main, ...main.getDeepDependencySet()];
+			const expectedCounts = {
+				css: {
+					initial: resources.filter(r => !r.async && r.adapter.outputType === 'css').length,
+					final: resources.filter(r => r.adapter.outputType === 'css').length
+				},
+				js: {
+					initial: resources.filter(r => !r.async && r.adapter.outputType === 'js').length,
+					final: resources.filter(r => r.adapter.outputType === 'js').length
+				},
+				json: {
+					initial: 1,
+					final: 2
+				}
+			};
 
 			// static, canonical
-			await getWindow(`${c.server.uri}/browser?auto=false`, assertions);
+			await getWindow(`${c.server.uri}/browser?auto=false`, getAssertionsPredicate(expectedCounts));
 
 			// dynamic, canonical
-			await getWindow(`${c.server.uri}/browser?auto=false&dynamic=1`, assertions);
+			await getWindow(
+				`${c.server.uri}/browser?auto=false&dynamic=1`,
+				getAssertionsPredicate({
+					css: { ...expectedCounts.css, initial: 0 },
+					js: { ...expectedCounts.js, initial: 0 },
+					json: { ...expectedCounts.json, initial: 0 }
+				})
+			);
 
 			// static, non-canonical
 			await getWindow(
 				`${c.server.uri}/browser?auto=false&import=<${c.scopeKey}>/:./${c.entry}`,
-				assertions
+				getAssertionsPredicate(expectedCounts)
 			);
 
 			// dynamic, non-canonical
 			await getWindow(
 				`${c.server.uri}/browser?auto=false&dynamic=1&import=<${c.scopeKey}>/:./${c.entry}`,
-				assertions
+				getAssertionsPredicate({
+					css: { ...expectedCounts.css, initial: 0 },
+					js: { ...expectedCounts.js, initial: 0 },
+					json: { ...expectedCounts.json, initial: 0 }
+				})
 			);
 
 			assert.equal(server.statusCounts.get(302), undefined);
@@ -2964,36 +3106,87 @@ describe('RemoteLoader', () => {
 			}
 		}).use('tests/styles');
 
-		async function assertions(window) {
-			await window.client.import(window.IMPORT_REQUEST);
-			const { manifest } = await window.client.use(c.scopeKey).load();
-			assert.equal(window.document.head.querySelectorAll('link[rel=stylesheet]').length, 1);
-			// Make sure dynamic imports were not added to the manifest
-			assert(
-				!manifest.exists('react-dom/index.js'),
-				'Expected manifest to not include react-dom/index.js'
-			);
+		function getAssertionsPredicate(expectedCounts) {
+			return async ({ client, document, IMPORT_REQUEST }) => {
+				function countStylesheets() {
+					return document.querySelectorAll(
+						'style[data-remote-modules],link[data-remote-modules][rel=stylesheet]'
+					).length;
+				}
+
+				function countScripts() {
+					return document.querySelectorAll('script[data-remote-modules]').length;
+				}
+
+				assert.equal(countStylesheets(), expectedCounts.css.initial);
+				assert.equal(countScripts(), expectedCounts.js.initial + expectedCounts.json.initial);
+
+				await client.import(IMPORT_REQUEST).then(render => render());
+
+				assert.equal(countStylesheets(), expectedCounts.css.final);
+				assert.equal(countScripts(), expectedCounts.js.final + expectedCounts.json.final);
+
+				// Make sure dynamic imports were not added to the manifest
+				const { manifest } = await client.use(c.scopeKey).load();
+				assert(
+					!manifest.exists('react-dom/index.js'),
+					'Expected manifest to not include react-dom/index.js'
+				);
+			};
+		}
+
+		function countUnions(resources) {
+			return resources.reduce((acc, resource) => {
+				acc.add(resource.union);
+				return acc;
+			}, new Set()).size;
 		}
 
 		return getServer(async server => {
-			await server.install();
+			const [main] = await server.install();
+			const resources = [main, ...main.getDeepDependencySet()];
+			const expectedCounts = {
+				css: {
+					initial: countUnions(resources.filter(r => !r.async && r.adapter.outputType === 'css')),
+					final: countUnions(resources.filter(r => r.adapter.outputType === 'css'))
+				},
+				js: {
+					initial: countUnions(resources.filter(r => !r.async && r.adapter.outputType === 'js')),
+					final: countUnions(resources.filter(r => r.adapter.outputType === 'js'))
+				},
+				json: {
+					initial: 1,
+					final: 2
+				}
+			};
 
 			// static, canonical
-			await getWindow(`${c.server.uri}/browser?auto=false`, assertions);
+			await getWindow(`${c.server.uri}/browser?auto=false`, getAssertionsPredicate(expectedCounts));
 
 			// dynamic, canonical
-			await getWindow(`${c.server.uri}/browser?auto=false&dynamic=1`, assertions);
+			await getWindow(
+				`${c.server.uri}/browser?auto=false&dynamic=1`,
+				getAssertionsPredicate({
+					css: { ...expectedCounts.css, initial: 0 },
+					js: { ...expectedCounts.js, initial: 0 },
+					json: { ...expectedCounts.json, initial: 0 }
+				})
+			);
 
 			// static, non-canonical
 			await getWindow(
 				`${c.server.uri}/browser?auto=false&import=<${c.scopeKey}>/:./${c.entry}`,
-				assertions
+				getAssertionsPredicate(expectedCounts)
 			);
 
 			// dynamic, non-canonical
 			await getWindow(
 				`${c.server.uri}/browser?auto=false&dynamic=1&import=<${c.scopeKey}>/:./${c.entry}`,
-				assertions
+				getAssertionsPredicate({
+					css: { ...expectedCounts.css, initial: 0 },
+					js: { ...expectedCounts.js, initial: 0 },
+					json: { ...expectedCounts.json, initial: 0 }
+				})
 			);
 
 			assert.equal(server.statusCounts.get(302), undefined);
@@ -3014,8 +3207,12 @@ describe('RemoteLoader', () => {
 		return getServer(async server => {
 			await server.install();
 			await getClient(async client => {
-				await client.import(`<${c.scopeKey}>`);
+				await client.import(`<${c.scopeKey}>`).then(render => render());
 				const { manifest } = await client.use(c.scopeKey).load();
+				// Make sure only script resources were added to the manifest
+				for (const moduleId of manifest.list()) {
+					assert.equal(manifest.getType(moduleId), 'js');
+				}
 				// Make sure dynamic imports were not added to the manifest
 				assert(
 					!manifest.exists('react-dom/server.js'),
@@ -3042,14 +3239,324 @@ describe('RemoteLoader', () => {
 		return getServer(async server => {
 			await server.install();
 			await getClient(async client => {
-				await client.import(`<${c.scopeKey}>`);
+				await client.import(`<${c.scopeKey}>`).then(render => render());
 				const { manifest } = await client.use(c.scopeKey).load();
+				// Make sure only script resources were added to the manifest
+				for (const moduleId of manifest.list()) {
+					assert.equal(manifest.getType(moduleId), 'js');
+				}
 				// Make sure dynamic imports were not added to the manifest
 				assert(
 					!manifest.exists('react-dom/server.js'),
 					'Expected manifest to not include react-dom/server.js'
 				);
 			});
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
+		}, c);
+	});
+
+	it('should support SPA request flow in browser', () => {
+		const c = new ConfigStore({
+			...baseInstallerOptions,
+			[ConfigStore.symbolFor('tests/styles')]: {
+				entry: 'tests/styles',
+				preset: 'browser',
+				extensions: ['.css', '.less', '.sass', '.scss'],
+				server: {
+					static: ['dist/client.browser.js?(.map)']
+				}
+			}
+		}).use('tests/styles');
+
+		function getAssertionsPredicate(expectedCounts) {
+			return async ({ client, document, IMPORT_REQUEST }) => {
+				function countStylesheets() {
+					return document.querySelectorAll(
+						'style[data-remote-modules],link[data-remote-modules][rel=stylesheet]'
+					).length;
+				}
+
+				function countScripts() {
+					return document.querySelectorAll('script[data-remote-modules]').length;
+				}
+
+				assert.equal(countStylesheets(), expectedCounts.css.initial);
+				assert.equal(countScripts(), expectedCounts.js.initial + expectedCounts.json.initial);
+
+				await client.import(IMPORT_REQUEST).then(render => render());
+
+				assert.equal(countStylesheets(), expectedCounts.css.final);
+				assert.equal(countScripts(), expectedCounts.js.final + expectedCounts.json.final);
+
+				await client.reset();
+
+				assert.equal(countStylesheets(), 0);
+				assert.equal(countScripts(), 0);
+
+				await client.import(IMPORT_REQUEST).then(render => render());
+
+				assert.equal(countStylesheets(), expectedCounts.css.final);
+				assert.equal(countScripts(), 0);
+			};
+		}
+
+		return getServer(async server => {
+			const [main] = await server.install();
+			const resources = [main, ...main.getDeepDependencySet()];
+			const expectedCounts = {
+				css: {
+					initial: resources.filter(r => !r.async && r.adapter.outputType === 'css').length,
+					final: resources.filter(r => r.adapter.outputType === 'css').length
+				},
+				js: {
+					initial: resources.filter(r => !r.async && r.adapter.outputType === 'js').length,
+					final: resources.filter(r => r.adapter.outputType === 'js').length
+				},
+				json: {
+					initial: 1,
+					final: 2
+				}
+			};
+
+			// static
+			await getWindow(`${c.server.uri}/browser?auto=false`, getAssertionsPredicate(expectedCounts));
+
+			// dynamic
+			await getWindow(
+				`${c.server.uri}/browser?auto=false&dynamic=1`,
+				getAssertionsPredicate({
+					css: { ...expectedCounts.css, initial: 0 },
+					js: { ...expectedCounts.js, initial: 0 },
+					json: { ...expectedCounts.json, initial: 0 }
+				})
+			);
+
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
+		}, c);
+	});
+
+	it('should support SPA request flow in browser (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
+		const c = new ConfigStore({
+			...baseInstallerOptions,
+			[ConfigStore.symbolFor('tests/styles')]: {
+				entry: 'tests/styles',
+				preset: 'browser',
+				extensions: ['.css', '.less', '.sass', '.scss'],
+				middleware: [UnionMiddleware()],
+				server: {
+					static: ['dist/client.browser.js?(.map)']
+				}
+			}
+		}).use('tests/styles');
+
+		function getAssertionsPredicate(expectedCounts) {
+			return async ({ client, document, IMPORT_REQUEST }) => {
+				function countStylesheets() {
+					return document.querySelectorAll(
+						'style[data-remote-modules],link[data-remote-modules][rel=stylesheet]'
+					).length;
+				}
+
+				function countScripts() {
+					return document.querySelectorAll('script[data-remote-modules]').length;
+				}
+
+				assert.equal(countStylesheets(), expectedCounts.css.initial);
+				assert.equal(countScripts(), expectedCounts.js.initial + expectedCounts.json.initial);
+
+				await client.import(IMPORT_REQUEST).then(render => render());
+
+				assert.equal(countStylesheets(), expectedCounts.css.final);
+				assert.equal(countScripts(), expectedCounts.js.final + expectedCounts.json.final);
+
+				await client.reset();
+
+				assert.equal(countStylesheets(), 0);
+				assert.equal(countScripts(), 0);
+
+				await client.import(IMPORT_REQUEST).then(render => render());
+
+				assert.equal(countStylesheets(), expectedCounts.css.final);
+				assert.equal(countScripts(), 0);
+			};
+		}
+
+		function countUnions(resources) {
+			return resources.reduce((acc, resource) => {
+				acc.add(resource.union);
+				return acc;
+			}, new Set()).size;
+		}
+
+		return getServer(async server => {
+			const [main] = await server.install();
+			const resources = [main, ...main.getDeepDependencySet()];
+			const expectedCounts = {
+				css: {
+					initial: countUnions(resources.filter(r => !r.async && r.adapter.outputType === 'css')),
+					final: countUnions(resources.filter(r => r.adapter.outputType === 'css'))
+				},
+				js: {
+					initial: countUnions(resources.filter(r => !r.async && r.adapter.outputType === 'js')),
+					final: countUnions(resources.filter(r => r.adapter.outputType === 'js'))
+				},
+				json: {
+					initial: 1,
+					final: 2
+				}
+			};
+
+			// static
+			await getWindow(`${c.server.uri}/browser?auto=false`, getAssertionsPredicate(expectedCounts));
+
+			// dynamic
+			await getWindow(
+				`${c.server.uri}/browser?auto=false&dynamic=1`,
+				getAssertionsPredicate({
+					css: { ...expectedCounts.css, initial: 0 },
+					js: { ...expectedCounts.js, initial: 0 },
+					json: { ...expectedCounts.json, initial: 0 }
+				})
+			);
+
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
+		}, c);
+	});
+
+	it('should support stylesheet entrypoints', () => {
+		const c = new ConfigStore({
+			...baseInstallerOptions,
+			[ConfigStore.symbolFor('tests/styles')]: {
+				entry: 'tests/styles',
+				preset: 'browser',
+				extensions: ['.css', '.less', '.sass', '.scss'],
+				server: {
+					static: ['dist/client.browser.js?(.map)']
+				}
+			}
+		}).use('tests/styles');
+
+		const entrypointId = './tests/styles/styles.less';
+
+		function getAssertionsPredicate(expectedStyleCount) {
+			return async ({ client, document, IMPORT_SCOPE }) => {
+				function countStylesheets() {
+					return document.querySelectorAll(
+						'style[data-remote-modules],link[data-remote-modules][rel=stylesheet]'
+					).length;
+				}
+
+				function countScripts() {
+					return document.querySelectorAll('script[data-remote-modules]').length;
+				}
+
+				await client.import(`<${IMPORT_SCOPE}>`);
+				await client.reset();
+
+				assert.equal(countStylesheets(), 0);
+				assert.equal(countScripts(), 0);
+
+				await client.import(`<${IMPORT_SCOPE}>/:${entrypointId}`);
+
+				assert.equal(countStylesheets(), expectedStyleCount);
+				assert.equal(countScripts(), 1);
+			};
+		}
+
+		return getServer(async server => {
+			const [main] = await server.install();
+			const entrypoint = main.resourceFactory(`./${Path.basename(entrypointId)}`, main);
+			const resources = [entrypoint, ...entrypoint.getDeepDependencySet()];
+			const expectedStyleCount = resources.filter(r => r.adapter.outputType === 'css').length;
+
+			// static
+			await getWindow(
+				`${c.server.uri}/browser?auto=false`,
+				getAssertionsPredicate(expectedStyleCount)
+			);
+
+			// dynamic
+			await getWindow(
+				`${c.server.uri}/browser?auto=false&dynamic=1`,
+				getAssertionsPredicate(expectedStyleCount)
+			);
+
+			assert.equal(server.statusCounts.get(302), undefined);
+			assert.equal(server.statusCounts.get(404), undefined);
+		}, c);
+	});
+
+	it('should support stylesheet entrypoints (unions)', () => {
+		const { UnionMiddleware } = ConfigStore.middleware;
+		const c = new ConfigStore({
+			...baseInstallerOptions,
+			[ConfigStore.symbolFor('tests/styles')]: {
+				entry: 'tests/styles',
+				preset: 'browser',
+				extensions: ['.css', '.less', '.sass', '.scss'],
+				middleware: [UnionMiddleware()],
+				server: {
+					static: ['dist/client.browser.js?(.map)']
+				}
+			}
+		}).use('tests/styles');
+
+		const entrypointId = './tests/styles/styles.less';
+
+		function getAssertionsPredicate(expectedStyleCount) {
+			return async ({ client, document, IMPORT_SCOPE }) => {
+				function countStylesheets() {
+					return document.querySelectorAll(
+						'style[data-remote-modules],link[data-remote-modules][rel=stylesheet]'
+					).length;
+				}
+
+				function countScripts() {
+					return document.querySelectorAll('script[data-remote-modules]').length;
+				}
+
+				await client.import(`<${IMPORT_SCOPE}>`);
+				await client.reset();
+
+				assert.equal(countStylesheets(), 0);
+				assert.equal(countScripts(), 0);
+
+				await client.import(`<${IMPORT_SCOPE}>/:${entrypointId}`);
+
+				assert.equal(countStylesheets(), expectedStyleCount);
+				assert.equal(countScripts(), 1);
+			};
+		}
+
+		function countUnions(resources) {
+			return resources.reduce((acc, resource) => {
+				acc.add(resource.union);
+				return acc;
+			}, new Set()).size;
+		}
+
+		return getServer(async server => {
+			const [main] = await server.install();
+			const entrypoint = main.resourceFactory(`./${Path.basename(entrypointId)}`, main);
+			const resources = [entrypoint, ...entrypoint.getDeepDependencySet()];
+			const expectedStyleCount = countUnions(resources.filter(r => r.adapter.outputType === 'css'));
+
+			// static
+			await getWindow(
+				`${c.server.uri}/browser?auto=false`,
+				getAssertionsPredicate(expectedStyleCount)
+			);
+
+			// dynamic
+			await getWindow(
+				`${c.server.uri}/browser?auto=false&dynamic=1`,
+				getAssertionsPredicate(expectedStyleCount)
+			);
+
 			assert.equal(server.statusCounts.get(302), undefined);
 			assert.equal(server.statusCounts.get(404), undefined);
 		}, c);

@@ -1,24 +1,36 @@
 /* eslint-env browser */
 
+import Manifest from '../../lib/manifest';
 import calculatePID from '../../lib/helpers/pid';
 import defineProperties from '../../lib/helpers/defineProperties';
 import noop from '../../lib/helpers/noop';
 
-function getMainScript(request) {
-	const mainScript = document.querySelector('script[data-main][data-module-id][data-pid]');
-	return mainScript && (mainScript.getAttribute('data-module-id') || '').includes(request)
-		? mainScript
+function getMainTag(request) {
+	const mainTag = document.querySelector(
+		'*[data-remote-modules][data-main]:not([data-mark-sweep])'
+	);
+	return mainTag && (mainTag.getAttribute('data-module-id') || '').includes(request)
+		? mainTag
 		: null;
 }
 
 function getMainModuleId(request) {
-	const mainScript = getMainScript(request);
-	return (mainScript && mainScript.getAttribute('data-module-id')) || undefined;
+	const mainTag = getMainTag(request);
+	return (mainTag && mainTag.getAttribute('data-module-id')) || undefined;
 }
 
 function getMainPid(request) {
-	const mainScript = getMainScript(request);
-	return (mainScript && Number(mainScript.getAttribute('data-pid'))) || undefined;
+	const mainTag = getMainTag(request);
+	return (mainTag && Number(mainTag.getAttribute('data-pid'))) || undefined;
+}
+
+function getMainType(request) {
+	const mainTag = getMainTag(request);
+	return mainTag && (mainTag.tagName === 'LINK' || mainTag.tagName === 'STYLE') ? 'css' : 'js';
+}
+
+function getExistingTag(pid) {
+	return document.querySelector(`*[data-remote-modules][data-pid="${pid}"]:not([data-mark-sweep])`);
 }
 
 export default class ModuleTransport {
@@ -35,41 +47,81 @@ export default class ModuleTransport {
 		}
 	);
 
-	async loadScript(request, parent) {
+	// eslint-disable-next-line class-methods-use-this
+	getResetPredicate() {
+		const existing = document.querySelectorAll('*[data-remote-modules]:not([data-mark-sweep])');
+		existing.forEach(element => {
+			// eslint-disable-next-line no-param-reassign
+			element.dataset.markSweep = '';
+		});
+		return () => {
+			existing.forEach(element => {
+				element.parentNode.removeChild(element);
+			});
+		};
+	}
+
+	async loadResource(request, parent) {
 		const { loader } = this;
-		let { moduleId, pid } = this.getModuleMeta(request, parent);
+		let { moduleId, pid, type } = this.getModuleMeta(request, parent);
 
 		if (!loader.getFromContext(pid)) {
 			if (pid) {
-				const script = document.createElement('script');
 				const url = loader.resolveURL(request, parent);
-				await new Promise((resolve, reject) => {
-					script.onload = () => resolve();
-					script.onerror = () => reject(new Error(`Failed to load '${url}'`));
-					script.src = url;
-					document.head.appendChild(script);
-				});
+				if (type === 'css') {
+					if (!getExistingTag(pid)) {
+						await new Promise((resolve, reject) => {
+							const link = document.createElement('link');
+							link.onload = () => resolve();
+							link.onerror = () => reject(new Error(`Failed to load '${url}'`));
+							link.rel = 'stylesheet';
+							link.href = url;
+							link.dataset.pid = pid;
+							link.dataset.remoteModules = '';
+							document.head.appendChild(link);
+						});
+					}
+				} else {
+					await new Promise((resolve, reject) => {
+						const script = document.createElement('script');
+						script.onload = () => resolve();
+						script.onerror = () => reject(new Error(`Failed to load '${url}'`));
+						script.src = url;
+						script.dataset.pid = pid;
+						script.dataset.remoteModules = '';
+						document.head.appendChild(script);
+					});
+				}
 			} else {
 				await Promise.all([
-					loader.fetchManifestJSON(request).then(manifestJSON => {
+					this.getManifestJSON(request).then(manifestJSON => {
 						const script = document.createElement('script');
-						script.setAttribute('type', 'application/json');
-						script.setAttribute('data-module-id', manifestJSON.meta.moduleId);
+						script.type = 'application/json';
+						script.dataset.moduleId = manifestJSON.meta.moduleId;
+						script.dataset.remoteModules = '';
 						script.innerHTML = JSON.stringify(manifestJSON);
 						document.head.appendChild(script);
 					}),
 					loader.fetch(loader.resolveURL(request, parent)).then(async res => {
 						if (res.ok) {
-							const script = document.createElement('script');
 							moduleId = res.headers['x-module-id'];
 							pid = Number(res.headers['x-pointer-id']);
-							script.setAttribute('data-pid', pid);
-							script.innerHTML = await res.text();
-							document.head.appendChild(script);
+							type = res.headers['x-resource-type'];
+
+							const element = document.createElement(type === 'css' ? 'style' : 'script');
+							element.dataset.pid = pid;
+							element.dataset.remoteModules = '';
+							element.innerHTML = await res.text();
+							document.head.appendChild(element);
+
 							// JSDOM doesn't execute scripts synchronously
-							if (process.env.NODE_ENV !== 'production' && !loader.getFromContext(pid)) {
+							if (
+								type === 'js' &&
+								process.env.NODE_ENV !== 'production' &&
+								!loader.getFromContext(pid)
+							) {
 								await new Promise(resolve => {
-									script.addEventListener('load', resolve);
+									element.addEventListener('load', resolve);
 								});
 							}
 						} else {
@@ -82,32 +134,34 @@ export default class ModuleTransport {
 			}
 		}
 
-		return { content: loader.context, moduleId, pid };
+		return { content: loader.context, moduleId, pid, type };
 	}
 
 	getModuleMeta(request, parent) {
 		const pid = this.loader.resolvePid(request, parent);
 		const moduleId = this.loader.resolve(request, parent);
+		const type = (parent && parent.manifest.getType(pid)) || 'js';
 		let meta;
 		if (pid) {
-			meta = { pid, moduleId };
+			meta = { pid, moduleId, type };
 		} else if (this.loader.getFromContext(calculatePID(moduleId))) {
-			meta = { pid: calculatePID(moduleId), moduleId };
+			meta = { pid: calculatePID(moduleId), moduleId, type };
 		} else {
 			meta = {
 				pid: getMainPid(moduleId),
-				moduleId: getMainModuleId(moduleId)
+				moduleId: getMainModuleId(moduleId),
+				type: getMainType(moduleId)
 			};
 		}
 		return meta;
 	}
 
-	// eslint-disable-next-line class-methods-use-this
 	getManifestJSON(id) {
 		const manifestScript = document.querySelector(
-			`script[type="application/json"][data-module-id="${id}"]`
+			`script[type="application/json"][data-module-id="${id}"]:not([data-mark-sweep])`
 		);
-		return manifestScript && JSON.parse(manifestScript.innerText || manifestScript.innerHTML);
+		const json = manifestScript && JSON.parse(manifestScript.innerText || manifestScript.innerHTML);
+		return json ? Promise.resolve(json) : this.loader.fetchManifestJSON(id, { types: 'css,js' });
 	}
 
 	initialize(request, parent) {
@@ -115,8 +169,29 @@ export default class ModuleTransport {
 		if (!pending[request]) {
 			pending[request] = new Promise(async (resolve, reject) => {
 				try {
-					const { content, moduleId, pid } = await this.loadScript(request, parent);
-					resolve(loader.register({ id: moduleId, pid, content, parent }));
+					const { content, moduleId, pid, type } = await this.loadResource(request, parent);
+					if (type === 'js') {
+						resolve(loader.register({ id: moduleId, pid, content, parent }));
+					} else {
+						const m = {
+							id: moduleId,
+							isMain: !parent,
+							exports: {},
+							loaded: false,
+							manifest: null,
+							exec: () => m.exports,
+							load: async () => {
+								if (m.isMain) {
+									const json = await this.getManifestJSON(m.id);
+									m.manifest = Manifest.load(json);
+									await loader.ensure(m);
+								}
+								m.loaded = true;
+								return m;
+							}
+						};
+						resolve(m);
+					}
 				} catch (err) {
 					reject(err);
 				}

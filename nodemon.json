@@ -1,5 +1,8 @@
 {
 	"ext": "js?(x|on) y?(a)ml",
 	"watch": ["**/*"],
-	"ignore": [".remote/", "node_modules/"]
+	"ignore": [".remote/", "dist/", "node_modules/"],
+	"events": {
+		"restart": "yarn run build:browser"
+	}
 }

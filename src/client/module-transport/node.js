@@ -8,8 +8,12 @@ export default class ModuleTransport {
 	pending = new Map();
 
 	// eslint-disable-next-line class-methods-use-this
-	getManifestJSON() {
-		/* noop */
+	getResetPredicate() {
+		// noop
+	}
+
+	getManifestJSON(id) {
+		return this.loader.fetchManifestJSON(id);
 	}
 
 	initialize(request, parent) {

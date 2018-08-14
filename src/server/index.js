@@ -31,7 +31,7 @@ function getResponseBody(path) {
 
 function generateTag({ type, target, ...other }) {
 	const attributes = Object.entries(other)
-		.map(([key, value]) => `${key}="${value}"`)
+		.map(([key, value]) => (value === true ? key : `${key}="${value}"`))
 		.join(' ');
 	switch (type) {
 		case 'css':
@@ -39,7 +39,7 @@ function generateTag({ type, target, ...other }) {
 		case 'js':
 			return `<script src="${target}" ${attributes}></script>`;
 		case 'json':
-			return `<script ${attributes} type="application/json">${target}</script>`;
+			return `<script type="application/json" ${attributes}>${target}</script>`;
 		default:
 			return '';
 	}
@@ -110,14 +110,22 @@ function createScopeRouter(C, watcher) {
 		return { ...pick(ctx, ['error', 'moduleId', 'pid']), manifestPath, resolved };
 	}
 
+	function getResourceType(resolved) {
+		const type = Path.extname(resolved).replace(/^\./, '');
+		return type === 'css' || type === 'js' ? type : 'raw';
+	}
+
 	function getResourcePath(moduleId, query) {
 		return assembleResourceURL({ pathname: basePathname }, moduleId, query);
 	}
 
 	function renderStaticTags(request, type) {
 		const ctx = scopeResolver(request);
-		const dependencyFilter = meta => !type || type === meta.type;
-		const manifest = Manifest.load(getManifestJSON(ctx.manifestPath, { dependencyFilter }));
+		const manifest = Manifest.load(
+			getManifestJSON(ctx.manifestPath, {
+				dependencyFilter: meta => !type || type === meta.type
+			})
+		);
 
 		const tags = manifest.list().reduce((acc, moduleId) => {
 			const assetId = manifest.getAssetId(moduleId);
@@ -126,7 +134,9 @@ function createScopeRouter(C, watcher) {
 					assetId,
 					generateTag({
 						target: getResourcePath(assetId),
-						type: manifest.getType(moduleId)
+						type: manifest.getType(moduleId),
+						'data-pid': manifest.getPid(moduleId),
+						'data-remote-modules': true
 					})
 				);
 			}
@@ -141,7 +151,8 @@ function createScopeRouter(C, watcher) {
 					target: getResourcePath(manifest.meta('assetId')),
 					'data-module-id': manifest.meta('moduleId'),
 					'data-pid': manifest.meta('pid'),
-					'data-main': ''
+					'data-main': true,
+					'data-remote-modules': true
 				})
 			);
 		}
@@ -151,8 +162,14 @@ function createScopeRouter(C, watcher) {
 				ctx.manifestPath,
 				generateTag({
 					type: 'json',
-					target: JSON.stringify(manifest),
-					'data-module-id': manifest.meta('moduleId')
+					target: JSON.stringify(
+						getManifestJSON(ctx.manifestPath, {
+							dependencyFilter: meta => meta.type !== 'raw'
+						})
+					),
+					'data-module-id': manifest.meta('moduleId'),
+					'data-pid': manifest.meta('pid'),
+					'data-remote-modules': true
 				})
 			);
 		}
@@ -170,10 +187,11 @@ function createScopeRouter(C, watcher) {
 			ctx.body = `
 				<html>
 					<head>
-						${renderStaticTags(request, 'css')}
+						${dynamic ? '' : renderStaticTags(request, 'css')}
 					</head>
 					<body>
 						<script>
+							window.IMPORT_SCOPE = '${C.scopeKey}';
 							window.IMPORT_REQUEST = '${ctx.query.import ||
 								`<${C.scopeKey}>/${getResourcePathFromID(moduleId)}`}';
 							console.time('client:import');
@@ -182,7 +200,6 @@ function createScopeRouter(C, watcher) {
 						<script src="${basePathname}/static/dist/client.browser.js"></script>
 						<script>
 							window.client = new ImportClient({
-								ttl: ${ENV === 'development' ? 0 : undefined},
 								uri: '${C.getRoot().server.uri}'
 							});
 							if (${auto}) {
@@ -213,14 +230,21 @@ function createScopeRouter(C, watcher) {
 	});
 
 	router.get('/manifest(/)?:request(.*)', async ctx => {
-		const { error, manifestPath, moduleId, pid } = scopeResolver(ctx.params.request, true);
+		const { error, manifestPath, moduleId, pid, resolved } = scopeResolver(
+			ctx.params.request,
+			true
+		);
+		const types = new Set((ctx.query.types || 'js').split(','));
 		try {
 			if (error) {
 				throw error;
 			}
 			ctx.set('x-module-id', moduleId);
 			ctx.set('x-pointer-id', pid);
-			ctx.body = getManifestJSON(manifestPath);
+			ctx.set('x-resource-type', getResourceType(resolved));
+			ctx.body = getManifestJSON(manifestPath, {
+				dependencyFilter: meta => types.has(meta.type)
+			});
 			ctx.type = '.json';
 		} catch (err) {
 			if (err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND') {
@@ -243,6 +267,7 @@ function createScopeRouter(C, watcher) {
 	router.get('/_/~/:request(.*)', async ctx => {
 		try {
 			const resolved = Path.join(C.outputDir, ctx.params.request);
+			ctx.set('x-resource-type', getResourceType(resolved));
 			ctx.body = await getResponseBody(resolved);
 			ctx.type = Path.extname(resolved);
 		} catch (err) {
@@ -264,6 +289,7 @@ function createScopeRouter(C, watcher) {
 			const { resolved, moduleId, pid } = scopeResolver(ctx.params.request);
 			ctx.set('x-module-id', moduleId);
 			ctx.set('x-pointer-id', pid);
+			ctx.set('x-resource-type', getResourceType(resolved));
 			if (ctx.method === 'HEAD') {
 				// fast return for resolve calls
 				ctx.status = 204;

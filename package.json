@@ -1,6 +1,6 @@
 {
   "name": "remote-modules",
-  "version": "0.35.2",
+  "version": "0.36.0",
   "license": "MIT",
   "description": "A module manager for distributed applications",
   "repository": {
@@ -127,6 +127,7 @@
     "nodemon": "^1.12.1",
     "nyc": "^12.0.2",
     "prettier": "^1.7.4",
+    "sinon": "^6.1.5",
     "string-replace-loader": "^2.1.1",
     "strip-ansi": "^4.0.0",
     "webpack": "^4.8.1",

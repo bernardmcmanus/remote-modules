@@ -41,6 +41,10 @@ export default class Registry {
 		}
 	}
 
+	forEach(fn) {
+		return this.cache.forEach(fn);
+	}
+
 	sweep() {
 		if (!this.expires) {
 			this.expires = Date.now() + this.ttl;

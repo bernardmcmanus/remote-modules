@@ -94,21 +94,6 @@ export default manifest => {
 							)
 						]
 					)
-				),
-				t.ObjectProperty(
-					t.StringLiteral('exclusions'),
-					t.CallExpression(
-						t.MemberExpression(
-							buildDependenciesCallExpression(
-								t.ArrowFunctionExpression(
-									[t.Identifier('meta')],
-									t.UnaryExpression('!', t.CallExpression(filterIdentifier, [t.Identifier('meta')]))
-								)
-							),
-							t.Identifier('map')
-						),
-						[t.ArrowFunctionExpression([t.Identifier('meta')], t.Identifier('meta.pid'))]
-					)
 				)
 			]),
 			ASSET_MAP: assetMapIdentifier
