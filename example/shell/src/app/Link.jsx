@@ -5,7 +5,14 @@ import cc from 'classcat';
 export default function Link({ children, className, href }, { history }) {
 	const active = href === history.location.pathname;
 	return (
-		<a className={cc(['link', { active }, className])} href={href}>
+		<a
+			className={cc(['link', { active }, className])}
+			href={href}
+			onClick={e => {
+				e.preventDefault();
+				history.push(href)
+			}}
+		>
 			{children}
 		</a>
 	);

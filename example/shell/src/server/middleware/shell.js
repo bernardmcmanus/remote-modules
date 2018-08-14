@@ -29,6 +29,9 @@ export default server => {
 
 	app.use(async ctx => {
 		const data = await render(ctx);
+		if (data.status) {
+			ctx.status = data.status;
+		}
 		ctx.body = `
 			<html>
 				<head>

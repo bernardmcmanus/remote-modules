@@ -7,7 +7,10 @@ import createRouter from './router';
 const { NODE_ENV } = process.env;
 
 export default async ctx => {
-	const history = createMemoryHistory({ initialEntries: [ctx.url] });
+	const history = createMemoryHistory({
+		initialEntries: [ctx.url],
+		keyLength: 0
+	});
 	const router = createRouter({
 		config: { NODE_ENV },
 		store: { history },

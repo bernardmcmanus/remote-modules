@@ -2,33 +2,24 @@ version: '3'
 services:
 
   fragment-a:
-    command: yarn start
+    command: bash -c 'yarn install && yarn start'
     environment:
       - NODE_ENV=development
     volumes:
       - ./fragment:/src
       - ./fragment/.remote/a:/src/.remote
-      - /src/node_modules/dtrace-provider
-      - /src/node_modules/fsevents
-      - /src/node_modules/node-sass
 
   fragment-b:
-    command: yarn start
+    command: bash -c 'yarn install && yarn start'
     environment:
       - NODE_ENV=development
     volumes:
       - ./fragment:/src
       - ./fragment/.remote/b:/src/.remote
-      - /src/node_modules/dtrace-provider
-      - /src/node_modules/fsevents
-      - /src/node_modules/node-sass
 
   shell:
-    command: yarn start
+    command: bash -c 'yarn install && yarn start'
     environment:
       - NODE_ENV=development
     volumes:
       - ./shell:/src
-      - /src/node_modules/dtrace-provider
-      - /src/node_modules/fsevents
-      - /src/node_modules/node-sass
