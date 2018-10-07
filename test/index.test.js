@@ -1186,13 +1186,9 @@ describe('Installer', () => {
 			...baseInstallerOptions,
 			[ConfigStore.symbolFor('tests/dead-code')]: {
 				entry: 'tests/dead-code',
-				preset: 'browser',
+				preset: 'node',
 				define: {
 					'process.env.BUILD_ENV': 'production'
-				},
-				provide: {
-					self: 'global',
-					window: 'global'
 				},
 				mainFields: ['module'],
 				uglify: false
