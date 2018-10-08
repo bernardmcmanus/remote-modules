@@ -1,6 +1,6 @@
 {
   "name": "remote-modules",
-  "version": "0.36.1",
+  "version": "0.36.2",
   "license": "MIT",
   "description": "A module manager for distributed applications",
   "repository": {
@@ -113,6 +113,7 @@
     "babel-loader": "^8.0.4",
     "babel-plugin-istanbul": "^4.1.5",
     "chai": "^4.1.2",
+    "cheerio": "^1.0.0-rc.2",
     "eslint": "^4.10.0",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-config-prettier": "^2.6.0",

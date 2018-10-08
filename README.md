@@ -341,24 +341,17 @@ function MyComponent() {
 
     If it doesn't already, `v1` will.
 
-    In the meantime, you _should_ be able to enable TypeScript support by updating your `.modulerc` with:
+    In the meantime, assuming you already have [@babel/preset-typescript](https://babeljs.io/docs/en/babel-preset-typescript) setup, you _should_ be able to enable TypeScript support by adding the following to your `.modulerc`:
 
     ```js
     module.exports = ({ ScriptAdapter }) => ({
       adapters: [{
-        test: ({ extension }) => /\.ts$/.test(extension),
+        test: ({ extension }) => /\.tsx?$/.test(extension),
         adapter: ScriptAdapter
       }],
-      babel: {
-        presets: [
-          '@babel/typescript'
-        ]
-      },
       babylon: {
-        plugins: [
-          'typescript'
-        ]
+        plugins: ['typescript']
       },
-      extensions: ['.d.ts', '.ts']
+      extensions: ['.ts', '.tsx']
     });
     ```

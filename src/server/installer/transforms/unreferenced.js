@@ -39,6 +39,11 @@ function generateRemovalFrame(path, reason) {
 
 export default (api, { logger, moduleId }) => ({
 	visitor: {
+		Program: {
+			exit() {
+				traverse.cache.clear();
+			}
+		},
 		Scope: {
 			exit(outerPath, state) {
 				/**
@@ -64,11 +69,25 @@ export default (api, { logger, moduleId }) => ({
 					},
 					IfStatement: {
 						exit(innerPath) {
-							const { confident, value } = innerPath.get('test').evaluate();
-							if (confident && !value) {
-								logger.trace(`${moduleId}:\n\n${generateRemovalFrame(innerPath, 'falsy')}\n`);
-								innerPath.remove();
-								innerPath.scope.crawl();
+							let targetPath = innerPath;
+							while (t.isIfStatement(targetPath)) {
+								const testPath = targetPath.get('test');
+								const { confident, value } = testPath.evaluate();
+								if (confident) {
+									const lastTargetPath = targetPath;
+									if (value) {
+										if (targetPath.get('alternate')) {
+											targetPath.get('alternate').remove();
+										}
+										targetPath = targetPath.get('consequent');
+									} else {
+										targetPath.get('consequent').remove();
+										targetPath = targetPath.get('alternate');
+									}
+									lastTargetPath.scope.crawl();
+								} else {
+									break;
+								}
 							}
 						}
 					},
