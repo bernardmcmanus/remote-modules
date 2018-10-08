@@ -1,4 +1,4 @@
-FROM node:8-slim
+FROM node:10-slim
 
 WORKDIR /src
 COPY .npmrc package.json yarn.lock /src/
