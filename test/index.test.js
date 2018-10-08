@@ -13,6 +13,7 @@ import got from 'got';
 import { JSDOM } from 'jsdom';
 import { assert as chaiAssert } from 'chai';
 import sinon from 'sinon';
+import cheerio from 'cheerio';
 
 import Server from '../src/server';
 import Installer from '../src/server/installer';
@@ -1385,6 +1386,77 @@ describe('Installer', () => {
 				{ uri: c.server.uri }
 			);
 		}, c);
+	});
+
+	it('should support typescript', async () => {
+		const configVariants = [
+			{
+				uglify: {
+					output: {
+						beautify: true
+					}
+				}
+			},
+			{
+				optimize: {
+					deadCode: false
+				}
+			},
+			{
+				env: 'production'
+			},
+			{
+				babel: {
+					presets: [
+						[
+							Path.resolve('dev/remote-package/node_modules/@babel/preset-env'),
+							{
+								modules: false,
+								targets: {
+									node: 'current'
+								},
+								useBuiltIns: 'usage'
+							}
+						]
+					]
+				}
+			}
+		];
+
+		for (const variant of configVariants) {
+			const { ScriptAdapter } = ConfigStore.adapters;
+			const c = new ConfigStore({
+				...baseInstallerOptions,
+				[ConfigStore.symbolFor('tests/typescript')]: {
+					entry: 'tests/typescript',
+					preset: 'node',
+					adapters: [
+						{
+							test: ({ extension }) => /\.tsx?$/.test(extension),
+							adapter: ScriptAdapter
+						}
+					],
+					babylon: {
+						plugins: ['typescript']
+					},
+					extensions: ['.ts', '.tsx'],
+					...variant
+				}
+			}).use('tests/typescript');
+
+			// eslint-disable-next-line no-await-in-loop
+			await getServer(async server => {
+				await server.install();
+				return getLoader(
+					async loader => {
+						const $ = cheerio.load(await loader.import());
+						assert.equal($('.Stateful').length, 1);
+						assert.equal($('.Stateless').length, 1);
+					},
+					{ uri: c.server.uri }
+				);
+			}, c);
+		}
 	});
 
 	it('should apply environment-based babel transforms', () => {

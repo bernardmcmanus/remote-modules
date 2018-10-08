@@ -7,11 +7,13 @@
   "module": "index.mjs",
   "browser": "index.browser.js",
   "scripts": {
-    "postinstall": "yarn run relay",
-    "relay": "relay-compiler --extensions js jsx --src tests/relay --schema tests/relay/schema.graphql"
+    "postinstall": "yarn run relay && yarn run validate:ts",
+    "relay": "relay-compiler --extensions js jsx --src tests/relay --schema tests/relay/schema.graphql",
+    "validate:ts": "tsc -p tests/typescript --noEmit"
   },
   "dependencies": {
     "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/plugin-transform-object-assign": "^7.0.0",
@@ -19,7 +21,10 @@
     "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-react": "^7.0.0",
+    "@babel/preset-typescript": "^7.1.0",
     "@babel/runtime": "^7.1.2",
+    "@types/react": "^16.4.16",
+    "@types/react-dom": "^16.0.8",
     "assert": "^1.4.1",
     "async": "^2.6.0",
     "babel-plugin-import-glob": "2.0.0",
@@ -48,6 +53,7 @@
     "relay-compiler": "~1.4.1",
     "slick-carousel": "^1.8.1",
     "styled-components": "^3.2.6",
+    "typescript": "^3.1.1",
     "universal-router": "^5.1.0",
     "util": "^0.10.3"
   }
