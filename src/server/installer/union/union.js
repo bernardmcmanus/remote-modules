@@ -142,7 +142,7 @@ export default class Union extends Set {
 					// see https://github.com/bernardmcmanus/remote-modules/issues/26
 					if (resources.length > 1) {
 						const output = resources
-							.map(r => r.output.replace(/\n?\/\/.+sourceMappingURL=.+$/m, ''))
+							.map(r => r.output.replace(/\n?.+# sourceMappingURL=.+$/m, ''))
 							.join('\n');
 						await this.writer.apply(outputPath, output);
 					} else {
