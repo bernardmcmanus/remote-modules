@@ -3,7 +3,9 @@
 </a>
 
 # Remote Modules
-> A module manager for distributed applications
+> A module manager for distributed applications</br></br>
+> [![nodejs](https://img.shields.io/badge/node-%3E=8.0.0-brightgreen.svg "nodejs")](https://nodejs.org/)
+> [![travis-ci](https://travis-ci.org/bernardmcmanus/remote-modules.svg?branch=master)](https://travis-ci.org/bernardmcmanus/remote-modules)
 
 # Contents
 <!-- AUTO-GENERATED AT COMMIT. DO NOT EDIT -->
