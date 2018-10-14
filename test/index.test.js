@@ -319,8 +319,9 @@ describe('ConfigStore', () => {
 						static: new Set()
 					});
 					break;
+				case key === 'sourceMaps':
 				case key === 'uglify':
-					assert.equal(value, false);
+					assert.equal(value, calculatedOpts[key]);
 					break;
 				case Object.hasOwnProperty.call(opts, key):
 					assert.deepEqual(value, opts[key]);
@@ -436,6 +437,7 @@ describe('ConfigStore', () => {
 			c => {
 				assert.equal(c.define['process.env.BUILD_ENV'], undefined);
 				assert.equal(c.define['process.env.NODE_ENV'], 'development');
+				assert.equal(c.sourceMaps, 'inline');
 				assert.equal(c.uglify, false);
 			},
 			() => {
@@ -451,9 +453,11 @@ describe('ConfigStore', () => {
 			c => {
 				assert.equal(c.define['process.env.BUILD_ENV'], undefined);
 				assert.equal(c.define['process.env.NODE_ENV'], 'production');
+				assert.equal(c.sourceMaps, true);
 				assert.deepEqual(c.uglify, {
 					compress: { inline: false, expression: true },
-					output: { comments: false }
+					output: { comments: false },
+					sourceMap: true
 				});
 			},
 			() => {
@@ -469,6 +473,7 @@ describe('ConfigStore', () => {
 			c => {
 				assert.equal(c.define['process.env.BUILD_ENV'], undefined);
 				assert.equal(c.define['process.env.NODE_ENV'], 'production');
+				assert.equal(c.sourceMaps, 'inline');
 				assert.equal(c.uglify, false);
 			},
 			() => {
@@ -484,9 +489,11 @@ describe('ConfigStore', () => {
 			c => {
 				assert.equal(c.define['process.env.BUILD_ENV'], undefined);
 				assert.equal(c.define['process.env.NODE_ENV'], 'development');
+				assert.equal(c.sourceMaps, 'inline');
 				assert.deepEqual(c.uglify, {
 					compress: { inline: false, expression: true },
-					output: { comments: false }
+					output: { comments: false },
+					sourceMap: true
 				});
 			},
 			() => {
@@ -501,9 +508,11 @@ describe('ConfigStore', () => {
 			c => {
 				assert.equal(c.define['process.env.BUILD_ENV'], undefined);
 				assert.equal(c.define['process.env.NODE_ENV'], 'development');
+				assert.equal(c.sourceMaps, 'inline');
 				assert.deepEqual(c.uglify, {
 					compress: { inline: false, expression: true },
-					output: { comments: true }
+					output: { comments: true },
+					sourceMap: true
 				});
 			},
 			() => {
@@ -518,20 +527,23 @@ describe('ConfigStore', () => {
 			() => Object.assign(process.env, originalENV)
 		);
 
-		// uglify = { compress: false } / BUILD_ENV = development
+		// sourceMaps: hidden / uglify = { compress: false } / BUILD_ENV = development
 		await getDisposer(
 			c => {
 				assert.equal(c.define['process.env.BUILD_ENV'], undefined);
 				assert.equal(c.define['process.env.NODE_ENV'], 'development');
+				assert.equal(c.sourceMaps, 'hidden');
 				assert.deepEqual(c.uglify, {
 					compress: false,
-					output: { comments: false }
+					output: { comments: false },
+					sourceMap: true
 				});
 			},
 			() => {
 				process.env.BUILD_ENV = 'development';
 				return new ConfigStore({
 					config: null,
+					sourceMaps: 'hidden',
 					uglify: { compress: false }
 				});
 			},
@@ -543,13 +555,17 @@ describe('ConfigStore', () => {
 			c => {
 				assert.equal(c.define['process.env.BUILD_ENV'], undefined);
 				assert.equal(c.define['process.env.NODE_ENV'], 'production');
+				assert.equal(c.use('default').sourceMaps, true);
+				assert.equal(c.use('override').sourceMaps, false);
 				assert.deepEqual(c.use('default').uglify, {
 					compress: false,
-					output: { comments: false }
+					output: { comments: false },
+					sourceMap: true
 				});
 				assert.deepEqual(c.use('override').uglify, {
 					compress: { inline: false, expression: true },
-					output: { comments: false }
+					output: { comments: false },
+					sourceMap: false
 				});
 			},
 			() => {
@@ -561,6 +577,7 @@ describe('ConfigStore', () => {
 						preset: 'browser'
 					},
 					[Scope('override')]: {
+						sourceMaps: false,
 						uglify: { compress: true }
 					}
 				});
@@ -594,14 +611,18 @@ describe('NormalResource', () => {
 
 describe('Parser', () => {
 	it('should print a formatted frame for syntax errors', () => {
-		const sourceRoot = Path.resolve('./dev/remote-package/tests/parser');
+		const sourceRoot = Path.resolve('dev/remote-package/tests/parser');
 		return Promise.all(
 			['es5.js', 'es6.js', 'jsx.jsx'].map(async file => {
 				const parser = createParser(C);
 				const slug = `./syntax-error/${file}`;
-				const source = await readFileAsync(Path.join(sourceRoot, slug));
+				const origin = Path.join(sourceRoot, slug);
+				const source = await readFileAsync(origin);
 				assert.throws(
-					() => parser.load(source, slug, sourceRoot),
+					() => {
+						parser.init(slug, origin, sourceRoot);
+						parser.load(source);
+					},
 					err => {
 						const [firstLine] = source.split('\n');
 						const cleanMessage = stripAnsi(err.message);
@@ -1455,6 +1476,161 @@ describe('Installer', () => {
 					},
 					{ uri: c.server.uri }
 				);
+			}, c);
+		}
+	});
+
+	it('should support source maps', async () => {
+		const resourceIds = [
+			'tests/source-maps/index.jsx',
+			'tests/source-maps/data.json',
+			'tests/source-maps/styles.css',
+			'tests/source-maps/styles.less',
+			'tests/source-maps/styles.sass',
+			'tests/source-maps/styles.scss',
+			'node_modules/react/index.js',
+			'node_modules/slick-carousel/slick/slick-theme.css',
+			'node_modules/slick-carousel/slick/slick-theme.less',
+			'node_modules/slick-carousel/slick/slick-theme.scss'
+		];
+
+		const configVariants = [
+			{
+				variant: null,
+				assertions: async (server, loader) => {
+					await Promise.all(
+						resourceIds.map(async resourceId => {
+							const resourceURL = loader.getResourceURLFromID(resourceId);
+							const sourceMapURL = `${resourceURL}.map`;
+							const { body } = await got(resourceURL);
+							try {
+								await got(sourceMapURL);
+							} catch (_err) {
+								// noop
+							}
+							assert(
+								body.includes('# sourceMappingURL=data:'),
+								`Expected '${resourceId}' to include inline source map`
+							);
+							assert.equal(body.match(/# sourceMappingURL=/g).length, 1);
+						})
+					);
+					assert.equal(server.statusCounts.get(200), resourceIds.length);
+					assert.equal(server.statusCounts.get(404), resourceIds.length);
+				}
+			},
+			{
+				variant: { sourceMaps: false },
+				assertions: async (server, loader) => {
+					await Promise.all(
+						resourceIds.map(async resourceId => {
+							const resourceURL = loader.getResourceURLFromID(resourceId);
+							const sourceMapURL = `${resourceURL}.map`;
+							const { body } = await got(resourceURL);
+							try {
+								await got(sourceMapURL);
+							} catch (_err) {
+								// noop
+							}
+							assert(
+								!body.includes('# sourceMappingURL='),
+								`Expected '${resourceId}' to not include source map url`
+							);
+						})
+					);
+					assert.equal(server.statusCounts.get(200), resourceIds.length);
+					assert.equal(server.statusCounts.get(404), resourceIds.length);
+				}
+			},
+			{
+				variant: { sourceMaps: true },
+				assertions: async (server, loader) => {
+					await Promise.all(
+						resourceIds.map(async resourceId => {
+							const resourceURL = loader.getResourceURLFromID(resourceId);
+							const sourceMapURL = `${resourceURL}.map`;
+							const { body } = await got(resourceURL);
+							await got(sourceMapURL);
+							assert(
+								body.includes(`# sourceMappingURL=${sourceMapURL}`),
+								`Expected '${resourceId}' to include source map url`
+							);
+							assert.equal(body.match(/# sourceMappingURL=/g).length, 1);
+						})
+					);
+					assert.equal(server.statusCounts.get(200), resourceIds.length * 2);
+					assert.equal(server.statusCounts.get(404), undefined);
+				}
+			},
+			{
+				variant: { sourceMaps: 'hidden' },
+				assertions: async (server, loader) => {
+					await Promise.all(
+						resourceIds.map(async resourceId => {
+							const resourceURL = loader.getResourceURLFromID(resourceId);
+							const sourceMapURL = `${resourceURL}.map`;
+							const { body } = await got(resourceURL);
+							assert(
+								!body.includes(`# sourceMappingURL=${sourceMapURL}`),
+								`Expected '${resourceId}' to not include source map url`
+							);
+							await got(sourceMapURL);
+						})
+					);
+					assert.equal(server.statusCounts.get(200), resourceIds.length * 2);
+					assert.equal(server.statusCounts.get(404), undefined);
+				}
+			},
+			{
+				variant: {
+					middleware: [
+						// FIXME: Source maps are incompatible with unions
+						// see https://github.com/bernardmcmanus/remote-modules/issues/26
+						ConfigStore.middleware.UnionMiddleware()
+					]
+				},
+				assertions: async (server, loader) => {
+					await Promise.all(
+						resourceIds.map(async resourceId => {
+							const resourceURL = loader.getResourceURLFromID(resourceId);
+							const sourceMapURL = `${resourceURL}.map`;
+							const { body } = await got(resourceURL);
+							assert(
+								!body.includes(`# sourceMappingURL=${sourceMapURL}`),
+								`Expected '${resourceId}' to not include source map url`
+							);
+						})
+					);
+					assert.equal(server.statusCounts.get(200), resourceIds.length);
+					assert.equal(server.statusCounts.get(404), undefined);
+				}
+			}
+		];
+
+		configVariants.push(
+			...configVariants.map(({ variant, assertions }) => ({
+				get variant() {
+					return { ...variant, uglify: true };
+				},
+				get assertions() {
+					return assertions;
+				}
+			}))
+		);
+
+		for (const { variant, assertions } of configVariants) {
+			const c = new ConfigStore({
+				...baseInstallerOptions,
+				[ConfigStore.symbolFor('tests/source-maps')]: {
+					entry: 'tests/source-maps',
+					...variant
+				}
+			}).use('tests/source-maps');
+
+			// eslint-disable-next-line no-await-in-loop
+			await getServer(async server => {
+				await server.install(true);
+				return getLoader(loader => assertions(server, loader), { uri: c.server.uri });
 			}, c);
 		}
 	});

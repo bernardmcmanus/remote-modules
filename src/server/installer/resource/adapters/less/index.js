@@ -30,7 +30,7 @@ class ImportManager extends less.FileManager {
 
 		return {
 			contents: dependency.source || (await readFileAsync(dependency.origin)),
-			filename: dependency.origin
+			filename: dependency.slug
 		};
 	}
 }
@@ -42,8 +42,13 @@ export default (C, ctx) => {
 		visitors: merge(adapter.visitors, {
 			Parse: {
 				pre: async resource => {
-					const { css } = await less.render(resource.output, {
+					const { parser } = resource.adapter;
+					const { css, map } = await less.render(resource.output, {
+						filename: resource.slug,
 						javascriptEnabled: true,
+						sourceMap: Boolean(resource.options.sourceMaps) && {
+							outputSourceFiles: true
+						},
 						relativeUrls: true,
 						plugins: [
 							{
@@ -54,6 +59,13 @@ export default (C, ctx) => {
 							}
 						]
 					});
+					if (map) {
+						const sourceMapJSON = {
+							...JSON.parse(map),
+							sourceRoot: parser.sourceRoot
+						};
+						parser.sourceMapJSON = sourceMapJSON;
+					}
 					// eslint-disable-next-line no-param-reassign
 					resource.output = css;
 					return adapter.runVisitor(resource, ['Parse', 'pre']);

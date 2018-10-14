@@ -13,7 +13,8 @@ export default preset => {
 					'typeof window': 'undefined',
 					'typeof document': 'undefined',
 					'typeof XMLHttpRequest': 'undefined'
-				}
+				},
+				sourceMaps: 'inline'
 			};
 		case 'browser':
 			return {

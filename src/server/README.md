@@ -23,6 +23,7 @@ babel ![Unstable](http://badges.github.io/stability-badges/dist/unstable.svg "Un
 babylon ![Unstable](http://badges.github.io/stability-badges/dist/unstable.svg "Unstable") | `{Object}` | See [`babylon`](#babylon) | Options passed to [@babel/parser](https://babeljs.io/docs/en/next/babel-parser.html)
 uglify ![Unstable](http://badges.github.io/stability-badges/dist/unstable.svg "Unstable") | `{Object\|boolean}` | See [`uglify`](#uglify) | Options passed to [uglify-es](https://github.com/mishoo/UglifyJS2)
 server ![Unstable](http://badges.github.io/stability-badges/dist/unstable.svg "Unstable") | `{Object}` | See [`server`](#server) | Server configuration
+sourceMaps ![Unstable](http://badges.github.io/stability-badges/dist/unstable.svg "Unstable") | `{string\|boolean}` | See [`sourceMaps`](#sourceMaps) | Source map configuration
 include ![Deprecated](http://badges.github.io/stability-badges/dist/deprecated.svg "Deprecated") | `{string[]}` | `[]` | An array of glob patterns for resources to be included with all import requests
 outputTarget ![Deprecated](http://badges.github.io/stability-badges/dist/deprecated.svg "Deprecated") | `{string}` | `'module'` | The module wrapper template
 core ![Deprecated](http://badges.github.io/stability-badges/dist/deprecated.svg "Deprecated") | `{Object}` | [browserify/resolve/lib/core.json](https://github.com/browserify/resolve/blob/master/lib/core.json) | An object that defines core modules
@@ -280,6 +281,17 @@ Accepts any options supported by [uglify-es](https://github.com/mishoo/UglifyJS2
 - __port:__ The server's internal port
 - __uri:__ The full, public server uri, i.e. `https://mydomain.io/modules/foo`
 - __redirects:__ Enables canonical URL redirects, i.e. `/@default => /@default/_/index.js`
+
+### sourceMaps
+```js
+env === 'production' ? true : 'inline'
+```
+- __inline:__ Generate and append base64-encoded source maps
+- __hidden:__ Generate external source maps but don't append the URLs
+- __true:__ Generate external source maps and append the URLs
+- __false:__ Don't generate source maps
+
+<sup>__NOTE:__ `sourceMaps` cannot be combined with [`UnionMiddleware`](#unionmiddleware-type-resource). See [#26](https://github.com/bernardmcmanus/remote-modules/issues/26).</sup>
 
 # SourceContext
 

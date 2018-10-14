@@ -136,11 +136,28 @@ export default class Union extends Set {
 		if (this.loaded()) {
 			const resourcesByAsset = this.calculateAssetIds();
 			await Promise.all(
-				[...resourcesByAsset.entries()].map(([assetId, resources]) => {
-					const path = slugToAbsolutePath(this.options.outputDir, assetId);
-					const output =
-						resources.length > 1 ? resources.map(r => r.output).join('\n') : resources[0].output;
-					return this.writer.apply(path, output);
+				[...resourcesByAsset.entries()].map(async ([assetId, resources]) => {
+					const outputPath = slugToAbsolutePath(this.options.outputDir, assetId);
+					// FIXME: Source maps are incompatible with unions
+					// see https://github.com/bernardmcmanus/remote-modules/issues/26
+					if (resources.length > 1) {
+						const output = resources
+							.map(r => r.output.replace(/\n?\/\/.+sourceMappingURL=.+$/m, ''))
+							.join('\n');
+						await this.writer.apply(outputPath, output);
+					} else {
+						const [resource] = resources;
+						const { sourceMaps } = resource.options;
+						const { sourceMapJSON } = resource.adapter.parser;
+						if (sourceMapJSON && (sourceMaps === true || sourceMaps === 'hidden')) {
+							const sourceMapPath = slugToAbsolutePath(
+								this.options.outputDir,
+								`${resource.slug}.map`
+							);
+							await this.writer.apply(sourceMapPath, `${JSON.stringify(sourceMapJSON, null, 2)}\n`);
+						}
+						await this.writer.apply(outputPath, resource.output);
+					}
 				})
 			);
 		}

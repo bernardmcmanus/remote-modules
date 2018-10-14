@@ -95,6 +95,18 @@ export default () =>
 			);
 		},
 		generate(resource, options) {
-			return css.stringify(this.ast, options);
-		}
+			const result = css.stringify(this.ast, {
+				inputSourcemaps: true,
+				sourcemap: Boolean(resource.options.sourceMaps && !this.sourceMapJSON),
+				...options
+			});
+			if (result.map) {
+				this.sourceMapJSON = {
+					...result.map,
+					sourceRoot: this.sourceRoot
+				};
+			}
+			return `${result.code || result}${this.getSourceMappingURL(resource)}`;
+		},
+		sourceMappingURL: content => `/*# sourceMappingURL=${content} */`
 	});
