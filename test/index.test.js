@@ -1571,7 +1571,7 @@ describe('Installer', () => {
 							const sourceMapURL = `${resourceURL}.map`;
 							const { body } = await got(resourceURL);
 							assert(
-								!body.includes(`# sourceMappingURL=${sourceMapURL}`),
+								!body.includes('# sourceMappingURL='),
 								`Expected '${resourceId}' to not include source map url`
 							);
 							await got(sourceMapURL);
@@ -1593,10 +1593,9 @@ describe('Installer', () => {
 					await Promise.all(
 						resourceIds.map(async resourceId => {
 							const resourceURL = loader.getResourceURLFromID(resourceId);
-							const sourceMapURL = `${resourceURL}.map`;
 							const { body } = await got(resourceURL);
 							assert(
-								!body.includes(`# sourceMappingURL=${sourceMapURL}`),
+								!body.includes('# sourceMappingURL='),
 								`Expected '${resourceId}' to not include source map url`
 							);
 						})
