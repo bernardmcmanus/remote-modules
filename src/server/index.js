@@ -100,14 +100,20 @@ function createScopeRouter(C, watcher) {
 	}
 
 	function scopeResolver(request, safe) {
-		const ctx = contextFactory((request || C.entry).replace(/^:/, ''));
+		const ctx = contextFactory((request || C.entry).replace(/^:|(:\d+){1,2}$/g, ''));
 		if (ctx.error && !safe) {
 			throw ctx.error;
 		}
 		const mappedSlug = getModuleMap()[ctx.slug] || ctx.slug;
 		const manifestPath = getManifestPath(slugToAbsolutePath(C.outputDir, mappedSlug));
 		const resolved = slugToAbsolutePath(C.outputDir, getAssetMap()[mappedSlug] || mappedSlug);
-		return { ...pick(ctx, ['error', 'moduleId', 'pid']), manifestPath, resolved };
+		const sourceMap = slugToAbsolutePath(C.outputDir, `${ctx.slug}.map`);
+		return {
+			...pick(ctx, ['error', 'moduleId', 'origin', 'pid']),
+			manifestPath,
+			resolved,
+			sourceMap
+		};
 	}
 
 	function getResourceType(resolved) {
@@ -229,16 +235,10 @@ function createScopeRouter(C, watcher) {
 		}
 	});
 
-	router.get('/manifest(/)?:request(.*)', async ctx => {
-		const { error, manifestPath, moduleId, pid, resolved } = scopeResolver(
-			ctx.params.request,
-			true
-		);
-		const types = new Set((ctx.query.types || 'js').split(','));
+	router.get('/manifest(/)?:request(.*)', async (ctx, next) => {
 		try {
-			if (error) {
-				throw error;
-			}
+			const types = new Set((ctx.query.types || 'js').split(','));
+			const { manifestPath, moduleId, pid, resolved } = scopeResolver(ctx.params.request);
 			ctx.set('x-module-id', moduleId);
 			ctx.set('x-pointer-id', pid);
 			ctx.set('x-resource-type', getResourceType(resolved));
@@ -250,13 +250,7 @@ function createScopeRouter(C, watcher) {
 			if (err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND') {
 				throw err;
 			}
-			ctx.status = 404;
-			ctx.body = {
-				message: `Cannot find manifest '${moduleId}'`,
-				status: 404,
-				code: 'ENOENT',
-				path: ctx.path
-			};
+			await next();
 		}
 	});
 
@@ -264,7 +258,7 @@ function createScopeRouter(C, watcher) {
 		ctx.body = renderStaticTags(ctx.params.request, ctx.query.type);
 	});
 
-	router.get('/_/~/:request(.*)', async ctx => {
+	router.get('/_/~/:request(.*)', async (ctx, next) => {
 		try {
 			const resolved = Path.join(C.outputDir, ctx.params.request);
 			ctx.set('x-resource-type', getResourceType(resolved));
@@ -274,17 +268,11 @@ function createScopeRouter(C, watcher) {
 			if (err.code !== 'ENOENT') {
 				throw err;
 			}
-			ctx.status = 404;
-			ctx.body = {
-				message: `Cannot find asset '${ctx.path}'`,
-				status: 404,
-				code: 'MODULE_NOT_FOUND',
-				path: ctx.path
-			};
+			await next();
 		}
 	});
 
-	router.get('/_(/)?:request(.*)', async ctx => {
+	router.get('/_(/)?:request(.*)', async (ctx, next) => {
 		try {
 			const { resolved, moduleId, pid } = scopeResolver(ctx.params.request);
 			ctx.set('x-module-id', moduleId);
@@ -316,15 +304,21 @@ function createScopeRouter(C, watcher) {
 		} catch (err) {
 			if (err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND') {
 				throw err;
-			} else if (!ctx.state.rewrite) {
-				ctx.status = 404;
-				ctx.body = {
-					message: `Cannot find module '${ctx.path}'`,
-					status: 404,
-					code: 'MODULE_NOT_FOUND',
-					path: ctx.path
-				};
 			}
+			await next();
+		}
+	});
+
+	router.get('/_(/)?:request(.*).map', async (ctx, next) => {
+		try {
+			const { sourceMap } = scopeResolver(ctx.params.request);
+			ctx.body = await getResponseBody(sourceMap);
+			ctx.type = Path.extname(sourceMap);
+		} catch (err) {
+			if (err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND') {
+				throw err;
+			}
+			await next();
 		}
 	});
 
@@ -345,6 +339,16 @@ function createScopeRouter(C, watcher) {
 			ctx.redirect(location);
 		});
 	}
+
+	router.use(ctx => {
+		ctx.status = 404;
+		ctx.body = {
+			message: `Cannot find module '${ctx.path}'`,
+			status: 404,
+			code: 'MODULE_NOT_FOUND',
+			path: ctx.path
+		};
+	});
 
 	return new Router().use(`/${C.scopeKey}`, router.routes(), router.allowedMethods());
 }
@@ -378,7 +382,6 @@ function createServer(C, watcher) {
 
 		appRouter.get(Path.join(basePublicPath, '/@static/:request(.*)'), async (ctx, next) => {
 			ctx.path = assembleResourceURL({ pathname: publicPath }, ctx.params.request);
-			ctx.state.rewrite = true;
 			await scopeRouter.routes()(ctx, next);
 			if (ctx.status === 404) {
 				ctx.url = ctx.originalUrl;

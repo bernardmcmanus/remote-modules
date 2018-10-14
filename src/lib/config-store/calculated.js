@@ -32,6 +32,10 @@ export default opts => {
 		...pickDefined(opts.server)
 	};
 
+	const sourceMaps =
+		// eslint-disable-next-line no-nested-ternary
+		opts.sourceMaps !== undefined ? opts.sourceMaps : opts.env === 'production' ? true : 'inline';
+
 	let uglify =
 		opts.uglify !== undefined
 			? opts.uglify
@@ -48,6 +52,7 @@ export default opts => {
 	 * module will be treated as dead code and removed.
 	 */
 	if (uglify) {
+		uglify = merge(uglify, { sourceMap: Boolean(sourceMaps) });
 		if (uglify.compress === true) {
 			uglify.compress = getDefaults('uglify').compress;
 		}
@@ -56,5 +61,5 @@ export default opts => {
 		}
 	}
 
-	return { babel, define, optimize, server, uglify };
+	return { babel, define, optimize, server, sourceMaps, uglify };
 };

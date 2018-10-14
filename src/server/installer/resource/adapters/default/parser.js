@@ -2,7 +2,6 @@ import Path from 'path';
 
 import * as babylon from '@babel/parser';
 import * as babel from '@babel/core';
-import generate from '@babel/generator';
 import { codeFrameColumns } from '@babel/code-frame';
 import ASTQ from 'astq';
 import glob from 'glob';
@@ -56,6 +55,8 @@ const buildQuery = memoize(input => {
 });
 
 function getBabelOpts(parser, resource, options) {
+	const sourceMaps = Boolean(resource.options.sourceMaps);
+	const retainLines = sourceMaps && resource.options.preset === 'node';
 	return babelMerge.all([
 		{
 			/**
@@ -64,6 +65,8 @@ function getBabelOpts(parser, resource, options) {
 			 */
 			babelrc: false,
 			filenameRelative: parser.sourceFilename,
+			retainLines,
+			sourceMaps,
 			shouldPrintComment: content => parser.requests.some(({ value }) => value === content),
 			...pickDefined(pick(parser, ['filename', 'shouldPrintComment', 'sourceRoot']))
 		},
@@ -137,20 +140,27 @@ export default C =>
 		},
 		transform(resource, options) {
 			const opts = getBabelOpts(this, resource, { ...options, ast: true, code: false });
-			return babel.transformFromAst(this.ast, null, opts).ast;
+			const { ast } = babel.transformFromAstSync(this.ast, null, opts);
+			return ast;
 		},
 		generate(resource, options) {
-			const opts = getBabelOpts(this, resource, { ...options, ast: false, code: true });
-			return generate(this.ast, opts).code;
+			const opts = getBabelOpts(this, resource, options);
+			const { code, map } = babel.transformFromAstSync(this.ast, this.source, opts);
+			this.sourceMapJSON = { ...map, sourcesContent: [this.source] };
+			return `${code}${this.getSourceMappingURL(resource)}`;
 		},
 		compress(resource, options) {
 			// FIXME: Uglify directly from AST before generate?
 			// https://github.com/mishoo/UglifyJS2/tree/v3.3.12#using-native-uglify-ast-with-minify
 			const opts = merge.all([resource.options.uglify, cloneDeep(options)].filter(Boolean));
-			const { code, error } = UglifyJS.minify(this.output, opts);
+			const { code, error, map = '{}' } = UglifyJS.minify(
+				{ [this.resourceURL]: this.output },
+				opts
+			);
 			if (error) {
 				throw error;
 			}
-			return code;
+			this.sourceMapJSON = { ...JSON.parse(map), sourcesContent: [this.source] };
+			return `${code}${this.getSourceMappingURL(resource)}`;
 		}
 	});

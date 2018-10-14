@@ -93,6 +93,7 @@ export default function getDefaults(key) {
 				babylon: getDefaults('babylon'),
 				preset: undefined,
 				uglify: noop(/* calculated */),
+				sourceMaps: noop(/* calculated */),
 				adapters: getDefaults('adapters'),
 				middleware: [
 					// Treat absolute URIs as external resources

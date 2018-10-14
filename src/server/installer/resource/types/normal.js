@@ -1,4 +1,5 @@
 import Path from 'path';
+import Url from 'url';
 
 import hash from 'object-hash';
 
@@ -331,12 +332,14 @@ export default class NormalResource {
 			this.logger.info(`Traverse '${this.moduleId}'`);
 			this.optionsChecksum = this.getOptionsChecksum();
 
+			adapter.parser.init(this.slug, this.origin, Url.resolve(`${this.options.server.uri}/`, '_/'));
+
 			await this.runVisitor('Read', () => this.read());
 
 			this.output = this.source;
 
 			await this.runVisitor('Parse', () => {
-				adapter.parser.load(this.output, this.slug, this.options.rootDir);
+				adapter.parser.load(this.output);
 			});
 
 			await this.runVisitor('Requests', async () => {

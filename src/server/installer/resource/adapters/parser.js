@@ -1,4 +1,4 @@
-import Path from 'path';
+import Url from 'url';
 
 import stripBOM from 'strip-bom';
 
@@ -26,19 +26,44 @@ export default class Parser {
 		this.methods = {
 			compress: output => output,
 			transform: () => this.ast,
+			sourceMappingURL: content => `//# sourceMappingURL=${content}`,
 			...methods
 		};
 	}
 
 	requests = [];
 
-	load(source, slug, sourceRoot) {
+	sourceMapJSON = null;
+
+	get resourceURL() {
+		return Url.resolve(this.sourceRoot, this.sourceFilename);
+	}
+
+	getSourceMappingURL(resource) {
+		const { methods, sourceMapJSON, resourceURL } = this;
+		const { sourceMaps } = resource.options;
+		let result = '';
+		if (sourceMapJSON && sourceMapJSON.version) {
+			if (sourceMaps === 'inline') {
+				const base64 = Buffer.from(JSON.stringify(sourceMapJSON)).toString('base64');
+				result = `data:application/json;charset=utf-8;base64,${base64}`;
+			} else if (sourceMaps !== 'hidden') {
+				result = `${resourceURL}.map`;
+			}
+		}
+		return result && `\n${methods.sourceMappingURL(result)}`;
+	}
+
+	init(slug, origin, sourceRoot) {
+		this.filename = origin;
+		this.sourceFilename = slug;
+		this.sourceRoot = sourceRoot;
+	}
+
+	load(source) {
 		const cleanSource = typeof source === 'string' ? stripBOM(source) : source;
 		this.source = cleanSource;
 		this.output = cleanSource;
-		this.sourceFilename = slug;
-		this.sourceRoot = sourceRoot;
-		this.filename = Path.resolve(sourceRoot, slug);
 		this.ast = this.parse(cleanSource);
 	}
 
