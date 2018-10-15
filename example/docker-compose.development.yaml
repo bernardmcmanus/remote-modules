@@ -8,6 +8,7 @@ services:
     volumes:
       - ./fragment:/src
       - ./fragment/.remote/a:/src/.remote
+      - /src/node_modules
 
   fragment-b:
     command: bash -c 'yarn install && yarn start'
@@ -16,6 +17,7 @@ services:
     volumes:
       - ./fragment:/src
       - ./fragment/.remote/b:/src/.remote
+      - /src/node_modules
 
   shell:
     command: bash -c 'yarn install && yarn start'
@@ -23,3 +25,4 @@ services:
       - NODE_ENV=development
     volumes:
       - ./shell:/src
+      - /src/node_modules

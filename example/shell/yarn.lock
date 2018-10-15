@@ -6863,10 +6863,10 @@ regjsparser@^0.3.0:
   dependencies:
     jsesc "~0.5.0"
 
-remote-modules@^0.36.2:
-  version "0.36.2"
-  resolved "https://registry.yarnpkg.com/remote-modules/-/remote-modules-0.36.2.tgz#2aaa2f29bb890b51d60006014bed2904db0e1110"
-  integrity sha512-mIx8dEP33JutDRUhqruXtC+xnVkA/tdX9Q2pqVG2xVGL4QI6ysp3GA6Ud9f8EzDBx8vJ4GkE1rlZmQ5Dv374jA==
+remote-modules@^0.37.1:
+  version "0.37.1"
+  resolved "https://registry.yarnpkg.com/remote-modules/-/remote-modules-0.37.1.tgz#1fe56a9611005d6ce50c3969173bb0b79d9f95f4"
+  integrity sha512-MmAepGFSjaWiJIKKGnhz6sdkZ7aQpvlpeAHJcWRhcztxHsO2Fo5TyyTn9ylLmwJ7tz/HgCsfEQz4sE+s3sgDdg==
   dependencies:
     "@babel/cli" "^7.1.2"
     "@babel/code-frame" "^7.0.0"
