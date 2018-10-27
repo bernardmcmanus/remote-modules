@@ -7,7 +7,8 @@ module.exports = {
 					node: 'current'
 				}
 			}
-		]
+		],
+		'@babel/typescript'
 	],
 	plugins: [
 		'@babel/proposal-class-properties',

@@ -43,7 +43,7 @@
   "lint-staged": {
     "*.{js,ts}": [
       "prettier --write",
-      "npm run eslint",
+      "npm run eslint -- --fix",
       "git add"
     ],
     "*.{json,yaml}": [
@@ -55,12 +55,14 @@
       "git add"
     ]
   },
+  "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
+    "@babel/preset-typescript": "^7.1.0",
     "babel-eslint": "^10.0.1",
     "coveralls": "^3.0.2",
     "eslint": "^5.7.0",
