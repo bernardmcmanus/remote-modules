@@ -1,0 +1,74 @@
+{
+  "name": "remote-modules",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bernardmcmanus/remote-modules.git"
+  },
+  "author": {
+    "name": "Bernard McManus",
+    "email": "bernard.mcmanus.iv@gmail.com",
+    "url": "https://github.com/bernardmcmanus"
+  },
+  "homepage": "https://github.com/bernardmcmanus/remote-modules",
+  "keywords": [
+    "javascript",
+    "universal",
+    "remote",
+    "module",
+    "import",
+    "dynamic"
+  ],
+  "engines:": {
+    "node": ">=8",
+    "npm": ">=6",
+    "yarn": ">=1.8.0"
+  },
+  "engineStrict": true,
+  "scripts": {
+    "build": "exit 0",
+    "clean": "rimraf .nyc_output coverage dist",
+    "coveralls": "cat coverage/lcov.info | coveralls",
+    "eslint": "eslint --ext .js,.ts",
+    "format": "prettier --write '**/*.{js,json,ts}'",
+    "lint": "npm run eslint .",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build",
+    "pretest": "npm run lint",
+    "test": "BABEL_ENV=test exit 0",
+    "toc": "markdown-toc -i README.md && node -e 'process.exit(0)'"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "prettier --write",
+      "npm run eslint",
+      "git add"
+    ],
+    "*.{json,yaml}": [
+      "prettier --write",
+      "git add"
+    ],
+    "!*/README.md": [
+      "npm run toc",
+      "git add"
+    ]
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+    "@babel/preset-env": "^7.1.0",
+    "babel-eslint": "^10.0.1",
+    "coveralls": "^3.0.2",
+    "eslint": "^5.7.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-config-prettier": "^3.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "husky": "^1.1.2",
+    "lint-staged": "^7.3.0",
+    "markdown-toc": "^1.2.0",
+    "prettier": "^1.14.3",
+    "rimraf": "^2.6.2"
+  }
+}
