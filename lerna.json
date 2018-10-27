@@ -1,0 +1,10 @@
+{
+	"command": {
+		"publish": {
+			"allowBranch": ["master", "next"],
+			"ignoreChanges": ["*.md"]
+		}
+	},
+	"packages": ["packages/*"],
+	"version": "1.0.0-alpha.0"
+}

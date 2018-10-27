@@ -1,0 +1,48 @@
+{
+  "name": "@remote-modules/client",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bernardmcmanus/remote-modules.git"
+  },
+  "author": {
+    "name": "Bernard McManus",
+    "email": "bernard.mcmanus.iv@gmail.com",
+    "url": "https://github.com/bernardmcmanus"
+  },
+  "homepage": "https://github.com/bernardmcmanus/remote-modules",
+  "keywords": [
+    "javascript",
+    "universal",
+    "remote",
+    "module",
+    "import",
+    "dynamic"
+  ],
+  "engines:": {
+    "node": ">=8",
+    "npm": ">=6",
+    "yarn": ">=1.8.0"
+  },
+  "engineStrict": true,
+  "main": "dist/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "exit 0"
+  },
+  "dependencies": {
+    "agentkeepalive": "^4.0.0",
+    "core-js": "^2.5.7",
+    "url-search-params-polyfill": "^5.0.0"
+  },
+  "devDependencies": {
+    "babel-loader": "^8.0.4",
+    "fast-async": "^6.3.8",
+    "string-replace-loader": "^2.1.1",
+    "webpack": "^4.23.1",
+    "webpack-bundle-analyzer": "^3.0.3",
+    "webpack-cli": "^3.1.2"
+  }
+}
