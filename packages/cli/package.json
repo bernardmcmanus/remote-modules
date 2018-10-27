@@ -1,0 +1,39 @@
+{
+  "name": "@remote-modules/cli",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bernardmcmanus/remote-modules.git"
+  },
+  "author": {
+    "name": "Bernard McManus",
+    "email": "bernard.mcmanus.iv@gmail.com",
+    "url": "https://github.com/bernardmcmanus"
+  },
+  "homepage": "https://github.com/bernardmcmanus/remote-modules",
+  "keywords": [
+    "javascript",
+    "universal",
+    "remote",
+    "module",
+    "import",
+    "dynamic"
+  ],
+  "engines:": {
+    "node": ">=8",
+    "npm": ">=6",
+    "yarn": ">=1.8.0"
+  },
+  "engineStrict": true,
+  "main": "dist/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "exit 0"
+  },
+  "dependencies": {
+    "yargs": "^12.0.2"
+  },
+  "devDependencies": {}
+}
