@@ -1,7 +1,7 @@
 {
 	"extends": "../../tsconfig.json",
-	"exclude": ["dist/", "node_modules/", "test/"],
+	"exclude": ["es/", "lib/", "node_modules/", "test/", "ts/"],
 	"compilerOptions": {
-		"outDir": "dist"
+		"declarationDir": "ts"
 	}
 }
