@@ -5,13 +5,19 @@ extends:
   - airbnb-base/rules/strict
   - prettier
 overrides:
+  - files: ['**/*.ts']
+    parser: typescript-eslint-parser
+    rules:
+      no-dupe-class-members: off
+      no-undef: off
+      no-unused-vars: off
   - files: ['test/**/*.test.js']
     env:
-      mocha: true
+      jest: true
 rules:
   no-underscore-dangle: [error, { allowAfterThis: true }]
-  no-restricted-syntax: [error, {
-    selector: LabeledStatement
-  }, {
-    selector: WithStatement
-  }]
+  no-restricted-syntax: [error, { selector: LabeledStatement }, { selector: WithStatement }]
+settings:
+  import/resolver:
+    node:
+      extensions: [.js, .ts, .json]

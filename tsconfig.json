@@ -6,6 +6,7 @@
 		"declaration": true,
 		"strict": true,
 		"moduleResolution": "node",
+		"noUnusedLocals": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true
 	}

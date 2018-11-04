@@ -1,6 +1,8 @@
 {
   "name": "remote-modules",
   "private": true,
+  "license": "UNLICENSED",
+  "description": "A module manager for distributed applications",
   "repository": {
     "type": "git",
     "url": "https://github.com/bernardmcmanus/remote-modules.git"
@@ -27,14 +29,13 @@
   "engineStrict": true,
   "scripts": {
     "build": "lerna run build",
-    "clean": "rimraf .nyc_output coverage dist",
+    "clean": "lerna run clean",
     "coveralls": "cat coverage/lcov.info | coveralls",
     "eslint": "eslint --ext .js,.ts",
     "format": "prettier --write '**/*.{js,json,ts}'",
-    "lint": "npm run eslint .",
+    "lint": "npm run eslint . && lerna run validate:ts",
     "postinstall": "lerna bootstrap",
     "prebuild": "npm run clean",
-    "prepublishOnly": "npm run build",
     "pretest": "npm run lint",
     "publish": "lerna publish --npm-tag next",
     "test": "BABEL_ENV=test exit 0",
@@ -60,9 +61,9 @@
     "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
-    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-typescript": "^7.1.0",
+    "@types/node": "^10.12.2",
     "babel-eslint": "^10.0.1",
     "coveralls": "^3.0.2",
     "eslint": "^5.7.0",
@@ -74,6 +75,8 @@
     "lint-staged": "^7.3.0",
     "markdown-toc": "^1.2.0",
     "prettier": "^1.14.3",
-    "rimraf": "^2.6.2"
+    "rimraf": "^2.6.2",
+    "typescript": "^3.1.6",
+    "typescript-eslint-parser": "^20.1.1"
   }
 }

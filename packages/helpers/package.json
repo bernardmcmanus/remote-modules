@@ -1,6 +1,8 @@
 {
   "name": "@remote-modules/helpers",
   "version": "0.0.0",
+  "license": "MIT",
+  "description": "A module manager for distributed applications",
   "repository": {
     "type": "git",
     "url": "https://github.com/bernardmcmanus/remote-modules.git"
@@ -17,7 +19,8 @@
     "remote",
     "module",
     "import",
-    "dynamic"
+    "dynamic",
+    "helpers"
   ],
   "engines:": {
     "node": ">=8",
@@ -25,16 +28,23 @@
     "yarn": ">=1.8.0"
   },
   "engineStrict": true,
-  "main": "dist/index.js",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "types": "ts/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "exit 0"
+    "babel": "babel --extensions .js,.ts --copy-files --source-maps inline",
+    "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:es && npm run build:lib && npm run build:ts",
+    "build:es": "BABEL_TARGET=es npm run babel -- src --out-dir es",
+    "build:lib": "npm run babel -- src --out-dir lib",
+    "build:ts": "tsc --emitDeclarationOnly",
+    "clean": "rimraf coverage es lib ts",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build",
+    "validate:ts": "tsc --noEmit"
   },
-  "dependencies": {
-    "adler-32": "^1.2.0",
-    "winston": "^3.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {}
 }
