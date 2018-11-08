@@ -36,10 +36,11 @@
     "lint": "npm run eslint . && lerna run validate:ts",
     "postinstall": "lerna bootstrap",
     "prebuild": "npm run clean",
-    "pretest": "npm run lint",
+    "pretest": "npm run build && npm run lint",
     "publish": "lerna publish --npm-tag next",
-    "test": "BABEL_ENV=test exit 0",
-    "toc": "markdown-toc -i README.md && node -e 'process.exit(0)'"
+    "test": "npm run unit -- --coverage",
+    "toc": "bash -c 'markdown-toc -i README.md'",
+    "unit": "NODE_ENV=${NODE_ENV:-test} jest"
   },
   "lint-staged": {
     "*.{js,ts}": [
@@ -63,14 +64,18 @@
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-typescript": "^7.1.0",
+    "@babel/register": "^7.0.0",
     "@types/node": "^10.12.2",
+    "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
+    "babel-jest": "^23.6.0",
     "coveralls": "^3.0.2",
     "eslint": "^5.7.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-config-prettier": "^3.1.0",
     "eslint-plugin-import": "^2.14.0",
     "husky": "^1.1.2",
+    "jest": "^23.6.0",
     "lerna": "^3.4.3",
     "lint-staged": "^7.3.0",
     "markdown-toc": "^1.2.0",

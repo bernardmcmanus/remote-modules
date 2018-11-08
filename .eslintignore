@@ -2,3 +2,8 @@ coverage/
 dist/
 node_modules/
 *.d.ts
+
+packages/*/dist/
+packages/*/es/
+packages/*/lib/
+packages/*/ts/

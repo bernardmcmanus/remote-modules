@@ -3,6 +3,7 @@ module.exports = {
 		[
 			'@babel/env',
 			{
+				modules: process.env.BABEL_TARGET === 'es' ? false : undefined,
 				targets: {
 					node: '8'
 				}

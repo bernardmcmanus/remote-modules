@@ -11,7 +11,7 @@ overrides:
       no-dupe-class-members: off
       no-undef: off
       no-unused-vars: off
-  - files: ['test/**/*.test.js']
+  - files: ['**/test/**/*.test.js']
     env:
       jest: true
 rules:
@@ -20,4 +20,4 @@ rules:
 settings:
   import/resolver:
     node:
-      extensions: [.js, .ts, .json]
+      extensions: [.js, .ts, .d.ts, .json]
