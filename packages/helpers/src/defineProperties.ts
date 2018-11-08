@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-unresolved
-import { ObjectMap } from '@remote-modules/types';
+import { ObjectMap } from '../types';
 
 const DESCRIPTOR_KEYS = Object.freeze([
 	'value',

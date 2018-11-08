@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-unresolved
-import { ObjectMap } from '@remote-modules/types';
+import { ObjectMap } from '../types';
 
 /**
  * Retuns a new object composed of the picked properties

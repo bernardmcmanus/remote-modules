@@ -35,7 +35,7 @@
     "access": "public"
   },
   "scripts": {
-    "babel": "babel --extensions .js,.ts --copy-files --source-maps inline",
+    "babel": "babel --config-file ../../babel.config.js --extensions .js,.ts --copy-files --source-maps inline",
     "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:es && npm run build:lib && npm run build:ts",
     "build:es": "BABEL_TARGET=es npm run babel -- src --out-dir es",
     "build:lib": "npm run babel -- src --out-dir lib",
