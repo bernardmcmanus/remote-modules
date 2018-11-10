@@ -2,8 +2,3 @@ coverage/
 dist/
 package.json
 package-lock.json
-
-packages/*/dist/
-packages/*/es/
-packages/*/lib/
-packages/*/ts/
