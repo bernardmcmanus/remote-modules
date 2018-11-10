@@ -28,19 +28,19 @@
     "yarn": ">=1.8.0"
   },
   "engineStrict": true,
-  "main": "lib/index.js",
-  "module": "es/index.js",
-  "types": "ts/index.d.ts",
+  "main": "dist/lib/index.js",
+  "module": "dist/es/index.js",
+  "types": "dist/ts/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "babel": "babel --config-file ../../babel.config.js --extensions .js,.ts --copy-files --source-maps inline",
     "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:es && npm run build:lib && npm run build:ts",
-    "build:es": "BABEL_TARGET=es npm run babel -- src --out-dir es",
-    "build:lib": "npm run babel -- src --out-dir lib",
+    "build:es": "BABEL_TARGET=es npm run babel -- src --out-dir dist/es",
+    "build:lib": "npm run babel -- src --out-dir dist/lib",
     "build:ts": "tsc --emitDeclarationOnly",
-    "clean": "rimraf coverage es lib ts",
+    "clean": "rimraf coverage dist",
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
     "validate:ts": "tsc --noEmit"

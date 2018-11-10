@@ -20,4 +20,4 @@ rules:
 settings:
   import/resolver:
     node:
-      extensions: [.js, .ts, .d.ts, .json]
+      extensions: [.js, .ts, .json]

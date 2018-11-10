@@ -1,4 +1,4 @@
-import { ObjectMap } from '../types';
+import { ObjectMap } from './types';
 
 const DESCRIPTOR_KEYS = Object.freeze([
 	'value',
