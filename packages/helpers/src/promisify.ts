@@ -20,7 +20,7 @@ import identity from './identity';
  */
 export default function promisify(
 	fn: () => any,
-	context: any,
+	context?: any,
 	{ defaults = {}, xargs = identity } = {}
 ) {
 	return (...inputArgs: any[]) =>

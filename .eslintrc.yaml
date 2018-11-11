@@ -4,6 +4,15 @@ extends:
   - airbnb-base
   - airbnb-base/rules/strict
   - prettier
+rules:
+  no-underscore-dangle: [error, { allowAfterThis: true }]
+  no-restricted-syntax:
+    [
+      error,
+      { selector: ForInStatement },
+      { selector: LabeledStatement },
+      { selector: WithStatement },
+    ]
 overrides:
   - files: ['**/*.ts']
     parser: typescript-eslint-parser
@@ -14,10 +23,10 @@ overrides:
   - files: ['**/test/**/*.test.js']
     env:
       jest: true
-rules:
-  no-underscore-dangle: [error, { allowAfterThis: true }]
-  no-restricted-syntax: [error, { selector: LabeledStatement }, { selector: WithStatement }]
+  - files: ['**/{dev,test}/**']
+    rules:
+      import/no-extraneous-dependencies: [error, { devDependencies: true, packageDir: ['./'] }]
 settings:
   import/resolver:
     node:
-      extensions: [.js, .ts, .json]
+      extensions: [.js, .ts, .d.ts, .json]

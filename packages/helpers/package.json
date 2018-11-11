@@ -36,7 +36,8 @@
   },
   "scripts": {
     "babel": "babel --config-file ../../babel.config.js --extensions .js,.ts --copy-files --source-maps inline",
-    "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:es && npm run build:lib && npm run build:ts",
+    "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:cp && npm run build:es && npm run build:lib && npm run build:ts",
+    "build:cp": "mkdirp dist && ncp types dist/types",
     "build:es": "BABEL_TARGET=es npm run babel -- src --out-dir dist/es",
     "build:lib": "npm run babel -- src --out-dir dist/lib",
     "build:ts": "tsc --emitDeclarationOnly",
