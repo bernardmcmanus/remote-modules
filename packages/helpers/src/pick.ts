@@ -1,4 +1,4 @@
-import { ObjectMap } from './types';
+import { ObjectMap } from '../types';
 
 /**
  * Retuns a new object composed of the picked properties
