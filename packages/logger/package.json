@@ -1,0 +1,50 @@
+{
+  "name": "@remote-modules/logger",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "A module manager for distributed applications",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bernardmcmanus/remote-modules.git"
+  },
+  "author": {
+    "name": "Bernard McManus",
+    "email": "bernard.mcmanus.iv@gmail.com",
+    "url": "https://github.com/bernardmcmanus"
+  },
+  "homepage": "https://github.com/bernardmcmanus/remote-modules",
+  "keywords": [
+    "javascript",
+    "universal",
+    "remote",
+    "module",
+    "import",
+    "dynamic",
+    "logger"
+  ],
+  "engines:": {
+    "node": ">=8",
+    "npm": ">=6",
+    "yarn": ">=1.8.0"
+  },
+  "engineStrict": true,
+  "main": "dist/lib/index.js",
+  "types": "dist/ts/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "babel": "babel --config-file ../../babel.config.js --extensions .js,.ts --copy-files --source-maps inline",
+    "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:lib && npm run build:ts",
+    "build:lib": "npm run babel -- src --out-dir dist/lib",
+    "build:ts": "tsc --emitDeclarationOnly",
+    "clean": "rimraf coverage dist",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build",
+    "validate:ts": "tsc --noEmit"
+  },
+  "dependencies": {
+    "winston": "^3.1.0"
+  },
+  "devDependencies": {}
+}
