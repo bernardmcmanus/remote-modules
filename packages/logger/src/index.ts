@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { inspect } from 'util';
 
-import { createLogger, format, transports } from 'winston';
+import winston, { createLogger, format, transports } from 'winston';
 
 function getDefault(key: string) {
 	switch (key) {
@@ -19,7 +19,9 @@ export type LoggerOptions = {
 	label?: string;
 };
 
-export function Logger(opts: LoggerOptions = {}) {
+export type LoggerType = winston.Logger;
+
+export function Logger(opts: LoggerOptions = {}): LoggerType {
 	const { label = getDefault('label'), level = getDefault('level') } = opts;
 	return createLogger({
 		level,

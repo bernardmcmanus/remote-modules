@@ -1,5 +1,5 @@
 import Server from '../src';
 
-const server = Server();
+const server = new Server();
 
 server.listen(3000);

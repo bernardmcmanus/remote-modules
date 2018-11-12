@@ -37,12 +37,12 @@
     "babel": "babel --config-file ../../babel.config.js --extensions .js,.ts --copy-files --source-maps inline",
     "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:lib && npm run build:ts",
     "build:lib": "npm run babel -- src --out-dir dist/lib",
-    "build:ts": "tsc --emitDeclarationOnly",
+    "build:ts": "tsc --pretty --emitDeclarationOnly",
     "clean": "rimraf coverage dist",
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
-    "start": "../../node_modules/.bin/nodemon dev",
-    "validate:ts": "tsc --noEmit"
+    "start": "NODE_ENV=${NODE_ENV:-development} ../../node_modules/.bin/nodemon dev",
+    "validate:ts": "tsc --pretty --noEmit"
   },
   "dependencies": {
     "@remote-modules/helpers": "^0.0.0",

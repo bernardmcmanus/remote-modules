@@ -37,6 +37,7 @@
     "postinstall": "lerna bootstrap",
     "pretest": "npm run build && npm run lint",
     "publish": "lerna publish --npm-tag next",
+    "remote-modules": "node -r ./babel-register packages/cli/src",
     "test": "npm run unit -- --coverage",
     "toc": "bash -c 'markdown-toc -i README.md'",
     "unit": "NODE_ENV=${NODE_ENV:-test} jest"

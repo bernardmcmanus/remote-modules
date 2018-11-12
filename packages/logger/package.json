@@ -37,11 +37,11 @@
     "babel": "babel --config-file ../../babel.config.js --extensions .js,.ts --copy-files --source-maps inline",
     "build": "export NODE_ENV=${NODE_ENV:-production}; npm run build:lib && npm run build:ts",
     "build:lib": "npm run babel -- src --out-dir dist/lib",
-    "build:ts": "tsc --emitDeclarationOnly",
+    "build:ts": "tsc --pretty --emitDeclarationOnly",
     "clean": "rimraf coverage dist",
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
-    "validate:ts": "tsc --noEmit"
+    "validate:ts": "tsc --pretty --noEmit"
   },
   "dependencies": {
     "winston": "^3.1.0"

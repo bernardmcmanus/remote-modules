@@ -1,0 +1,6 @@
+#!/usr/bin/env node
+
+require('@babel/register')({
+	configFile: require.resolve('./babel.config'),
+	extensions: ['.js', '.ts']
+});
