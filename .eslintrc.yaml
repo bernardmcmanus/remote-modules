@@ -17,9 +17,11 @@ overrides:
   - files: ['**/*.ts']
     parser: typescript-eslint-parser
     rules:
+      lines-between-class-members: off
       no-dupe-class-members: off
       no-undef: off
       no-unused-vars: off
+      no-use-before-define: off
   - files: ['**/test/**/*.test.js']
     env:
       jest: true

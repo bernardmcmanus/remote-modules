@@ -40,11 +40,11 @@
     "build:browser": "webpack -r @babel/register --hide-modules --progress",
     "build:es": "BABEL_TARGET=es npm run babel -- src --out-dir dist/es",
     "build:lib": "npm run babel -- src --out-dir dist/lib",
-    "build:ts": "tsc --emitDeclarationOnly",
+    "build:ts": "tsc --pretty --emitDeclarationOnly",
     "clean": "rimraf coverage dist",
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
-    "validate:ts": "tsc --noEmit"
+    "validate:ts": "tsc --pretty --noEmit"
   },
   "dependencies": {
     "@remote-modules/helpers": "^0.0.0",

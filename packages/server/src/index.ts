@@ -6,51 +6,61 @@ import Router from 'koa-router';
 import etag from 'koa-etag';
 import conditional from 'koa-conditional-get';
 import logger from '@remote-modules/logger';
-import { promisify } from '@remote-modules/helpers';
 
 import timingMiddleware from './middleware/timing';
 
-export default function Server() {
-	const app = new Koa();
-	const router = new Router();
+export default class Server extends http.Server {
+	readonly app = new Koa();
+	readonly router = new Router();
+	private requestListener: (req: http.IncomingMessage, res: http.ServerResponse) => void;
 
-	router.get('/up/', ctx => {
-		ctx.state.noLog = true;
-		ctx.status = 204;
-	});
-
-	app
-		.use(timingMiddleware())
-		.use(conditional())
-		.use(etag())
-		.use(router.routes())
-		.use(router.allowedMethods())
-		.use(ctx => {
-			ctx.status = 404;
-			ctx.body = { message: 'Not Found' };
+	constructor() {
+		super((...args) => {
+			this.requestListener(...args);
 		});
 
-	app.on('error', err => {
-		logger.error(err);
-	});
+		const { app, router } = this;
 
-	const server = http.createServer(app.callback());
+		router.get('/up/', ctx => {
+			ctx.state.noLog = true;
+			ctx.status = 204;
+		});
 
-	async function listen(port: number) {
-		await promisify(server.listen, server)(port);
-		const address = server.address() as AddressInfo;
-		logger.info(`Listening on ${address.port}`);
+		app
+			.use(timingMiddleware())
+			.use(conditional())
+			.use(etag())
+			.use(router.routes())
+			.use(router.allowedMethods())
+			.use(ctx => {
+				ctx.status = 404;
+				ctx.body = { message: 'Not Found' };
+			});
+
+		app.on('error', err => {
+			logger.error(err);
+		});
+
+		this.requestListener = app.callback();
 	}
 
-	async function close() {
-		await promisify(server.close, server)();
+	address(): AddressInfo {
+		return super.address() as AddressInfo;
 	}
 
-	return Object.freeze(
-		Object.assign(Object.create(server), {
-			app,
-			listen,
-			close
-		})
-	);
+	// @ts-ignore
+	listen(port: number): Promise<void> {
+		return new Promise(resolve => {
+			super.listen(port, resolve);
+		}).then(() => {
+			logger.info(`Listening on ${this.address().port}`);
+		});
+	}
+
+	// @ts-ignore
+	close(): Promise<void> {
+		return new Promise(resolve => {
+			super.close(resolve);
+		});
+	}
 }
