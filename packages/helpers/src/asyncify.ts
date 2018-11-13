@@ -18,7 +18,7 @@ import last from './last';
  * 	return doSomethingAsync();
  * }));
  */
-export default function asyncify(fn: () => any, context?: any) {
+export default function asyncify(fn: (...args: any[]) => any, context?: any) {
 	return async (...args: any[]) => {
 		const cb = last(args);
 		const other = args.slice(0, -1);

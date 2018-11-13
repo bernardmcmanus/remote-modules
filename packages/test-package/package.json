@@ -1,0 +1,21 @@
+{
+  "name": "@remote-modules/test-package",
+  "private": true,
+  "version": "0.0.0",
+  "description": "remote modules test package",
+  "license": "UNLICENSED",
+  "main": "src/index.js",
+  "module": "src/index.mjs",
+  "browser": "src/index.browser.js",
+  "browser-object": {
+    "./src/index.js": "./src/index.browser.js"
+  },
+  "scripts": {},
+  "dependencies": {
+    "assert": "^1.4.1",
+    "core-js": "^2.5.5",
+    "fbjs": "0.8.16",
+    "react": "^16.6.1",
+    "util": "^0.11.1"
+  }
+}

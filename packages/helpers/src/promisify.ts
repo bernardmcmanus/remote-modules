@@ -19,7 +19,7 @@ import identity from './identity';
  * });
  */
 export default function promisify(
-	fn: () => any,
+	fn: (...args: any[]) => any,
 	context?: any,
 	{ defaults = {}, xargs = identity } = {}
 ) {

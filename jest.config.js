@@ -1,6 +1,8 @@
 module.exports = {
 	automock: false,
-	coverageReporters: ['json', 'lcov', 'text', 'text-summary'],
+	testEnvironment: 'node',
+	coverageReporters: ['html', 'json', 'lcov', 'text', 'text-summary'],
+	coveragePathIgnorePatterns: ['/dist/', '/node_modules/', '/test/', '/test-package/'],
 	// coverageThreshold: {
 	// 	global: {
 	// 		branches: 80,

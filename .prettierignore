@@ -1,4 +1,5 @@
 coverage/
 dist/
+packages/test-package/
 package.json
 package-lock.json
