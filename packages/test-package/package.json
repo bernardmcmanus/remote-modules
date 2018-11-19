@@ -15,7 +15,11 @@
     "assert": "^1.4.1",
     "core-js": "^2.5.5",
     "fbjs": "0.8.16",
+    "prop-types": "^15.6.2",
     "react": "^16.6.1",
+    "react-dom": "^16.6.1",
+    "react-helmet": "^5.2.0",
+    "styled-components": "^4.1.1",
     "util": "^0.11.1"
   }
 }

@@ -42,14 +42,14 @@ export type Descriptor = StaticDescriptor | DynamicDescriptor;
  * 	{ configurable: false }
  * );
  */
-export default function defineProperties(
-	object: object,
+export default function defineProperties<T>(
+	target: T,
 	props: ObjectMap<any>,
 	descriptorDefaults = {}
 ) {
 	const defaultDescriptor: BaseDescriptor = { enumerable: false, ...descriptorDefaults };
 	Object.defineProperties(
-		object,
+		target,
 		[...Object.keys(props), ...Object.getOwnPropertySymbols(props)].reduce(
 			(acc: ObjectMap<Descriptor>, key) => {
 				// @ts-ignore: TypeScript doesn't support symbol as an index type (https://git.io/fxhc9)
@@ -65,5 +65,5 @@ export default function defineProperties(
 			{}
 		)
 	);
-	return object;
+	return target;
 }
