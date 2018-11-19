@@ -83,6 +83,8 @@ describe('Resolver', () => {
 
 			assert.strictEqual(existsOnlyTop.match(/node_modules\//g).length, 1);
 			assert.strictEqual(existsBothSansBasedir.match(/node_modules\//g).length, 1);
+			assert.strictEqual(existsOnlyNested.match(/node_modules\//g).length, 2);
+			assert.strictEqual(existsBothWithBasedir.match(/node_modules\//g).length, 2);
 		});
 
 		it('should resolve relative requests from local modules', () => {
@@ -141,7 +143,10 @@ describe('Resolver', () => {
 
 			resolver.options.isFile = resolver.wrapFsCheck(spy);
 
-			resolver.sync('react');
+			assert(
+				resolver.sync('react').includes('/bower_components'),
+				'Expected resolved path to include /bower_components/'
+			);
 
 			assert.strictEqual(spy.callCount, 9);
 		});
@@ -222,6 +227,8 @@ describe('Resolver', () => {
 
 			assert.strictEqual(existsOnlyTop.match(/node_modules\//g).length, 1);
 			assert.strictEqual(existsBothSansBasedir.match(/node_modules\//g).length, 1);
+			assert.strictEqual(existsOnlyNested.match(/node_modules\//g).length, 2);
+			assert.strictEqual(existsBothWithBasedir.match(/node_modules\//g).length, 2);
 		});
 
 		it('should resolve relative requests from local modules', async () => {
@@ -283,7 +290,10 @@ describe('Resolver', () => {
 
 			resolver.options.isFileAsync = resolver.wrapFsCheckAsync(spy);
 
-			await resolver.async('react');
+			assert(
+				(await resolver.async('react')).includes('/bower_components'),
+				'Expected resolved path to include /bower_components/'
+			);
 
 			assert.strictEqual(spy.callCount, 8);
 		});

@@ -3,7 +3,7 @@ import Path from 'path';
 
 import resolve from 'resolve';
 import merge from 'deepmerge';
-import { asyncify, promisify, defineProperties, get } from '@remote-modules/helpers';
+import { asyncify, promisify, defineProperties, get, pickBy } from '@remote-modules/helpers';
 import { ObjectMap } from '@remote-modules/helpers/dist/types';
 
 const resolveAsync = promisify(resolve);
@@ -12,12 +12,11 @@ const statAsync = promisify(fs.stat, fs);
 type NodeCallback = (err: Error | null, result: any) => any;
 
 export interface ResolverOptions {
+	rootDir: string;
 	core?: ObjectMap<string>;
 	extensions?: string[] | ReadonlyArray<string>;
 	mainFields?: string[] | ReadonlyArray<string>;
 	moduleDirs?: string[] | ReadonlyArray<string>;
-	rootDir?: string;
-	baseDir?: string;
 	isFile?: (path: string) => boolean;
 	isFileAsync?: (path: string) => Promise<boolean>;
 	packageFilter?: (pkg: ObjectMap<string>) => ObjectMap<string>;
@@ -32,36 +31,39 @@ export default class Resolver {
 
 	static moduleDirs = Object.freeze(['node_modules']);
 
-	readonly options: ResolverOptions = {};
+	readonly options: ResolverOptions;
 
-	constructor(opts: ResolverOptions) {
-		const core = merge.all([{}, Resolver.core, opts.core].filter(Boolean)) as ObjectMap<string>;
+	constructor({ rootDir, ...other }: ResolverOptions) {
+		this.options = {
+			rootDir,
+			extensions: Resolver.extensions,
+			mainFields: Resolver.mainFields,
+			moduleDirs: Resolver.moduleDirs,
+			packageFilter: this.packageFilter,
+			...pickBy(other, value => value !== undefined),
+			isFile: this.wrapFsCheck(other.isFile || this.isFile),
+			isFileAsync: this.wrapFsCheckAsync(other.isFileAsync || this.isFileAsync),
+			core: merge.all([{}, Resolver.core, other.core].filter(Boolean)) as ObjectMap<string>
+		};
+
 		defineProperties(this, {
-			options: {
-				extensions: Resolver.extensions,
-				mainFields: Resolver.mainFields,
-				moduleDirs: Resolver.moduleDirs,
-				rootDir: process.cwd(),
-				packageFilter: this.packageFilter,
-				...opts,
-				isFile: this.wrapFsCheck(opts.isFile || this.isFile),
-				isFileAsync: this.wrapFsCheckAsync(opts.isFileAsync || this.isFileAsync),
-				core
-			}
+			options: this.options
 		});
 	}
 
-	wrapFsCheck(fn: (value: string) => boolean) {
-		return (value: string) => this.checkConstrained(value) && fn(value);
+	wrapFsCheck<T extends Function = (value: string) => boolean>(fn: T): T {
+		return <any>((value: string) => this.checkConstrained(value) && fn(value));
 	}
 
-	wrapFsCheckAsync(fn: (value: string, cb: NodeCallback) => Promise<boolean>) {
-		return async (value: string, cb: NodeCallback) => {
+	wrapFsCheckAsync<T extends Function = (value: string, cb: NodeCallback) => Promise<boolean>>(
+		fn: T
+	): T {
+		return <any>(async (value: string, cb: NodeCallback) => {
 			if (!this.checkConstrained(value)) {
 				return cb(null, false);
 			}
 			return fn(value, cb);
-		};
+		});
 	}
 
 	isFile = (file: string) => {
@@ -117,31 +119,33 @@ export default class Resolver {
 	};
 
 	checkConstrained(file: string) {
-		return file.startsWith(this.options.rootDir as string);
+		return file.startsWith(this.options.rootDir);
 	}
 
 	isCore(request: string) {
 		return Boolean((this.options.core as ObjectMap<string>)[request]);
 	}
 
-	sync(request: string, baseDir: string = this.options.rootDir as string) {
+	sync(request: string, baseDir: string = ''): string {
 		if (this.isCore(request)) {
 			return request;
 		}
-		const { moduleDirs, ...other } = this.options;
-		return resolve.sync(request, { ...other, basedir: baseDir, moduleDirectory: moduleDirs });
+		const { moduleDirs, rootDir, ...other } = this.options;
+		const basedir = Path.resolve(rootDir, baseDir);
+		return resolve.sync(request, { ...other, basedir, moduleDirectory: moduleDirs });
 	}
 
-	async async(request: string, baseDir: string = this.options.rootDir as string) {
+	async async(request: string, baseDir: string = ''): Promise<string> {
 		if (this.isCore(request)) {
 			return request;
 		}
-		const { moduleDirs, isFileAsync, ...other } = this.options;
+		const { isFileAsync, moduleDirs, rootDir, ...other } = this.options;
+		const basedir = Path.resolve(rootDir, baseDir);
 		return resolveAsync(request, {
 			...other,
+			basedir,
 			isFile: isFileAsync,
-			basedir: baseDir,
 			moduleDirectory: moduleDirs
-		});
+		}) as Promise<string>;
 	}
 }
