@@ -14,14 +14,11 @@ export type MemoizeProps<U, V> = {
  */
 export default function memoize<
 	T extends Function,
-	U extends Function,
+	U extends Function = typeof identity,
 	V extends Cache = Map<any, any>
->(fn: T, _resolver?: U, _cache?: V): T & MemoizeProps<U, V> {
-	const resolver = _resolver || identity;
-	const cache = _cache || new Map();
+>(fn: T, resolver = <U>(identity as unknown), cache = <V>new Map()): T & MemoizeProps<U, V> {
 	return <any>defineProperties(
 		(...args: any[]) => {
-			// @ts-ignore
 			const key = resolver(...args);
 			let value;
 			if (cache.has(key)) {
