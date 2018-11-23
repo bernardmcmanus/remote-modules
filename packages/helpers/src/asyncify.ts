@@ -14,8 +14,9 @@ import last from './last';
  * });
  *
  * // after
- * compiler.plugin('emit', asyncify(asset => {
- * 	return doSomethingAsync();
+ * compiler.plugin('emit', asyncify(async asset => {
+ * 	const result = await doSomethingAsync();
+ *  return result;
  * }));
  */
 export default function asyncify(fn: (...args: any[]) => any, context?: any) {
