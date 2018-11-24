@@ -1,5 +1,6 @@
 import defineProperties from './defineProperties';
 import identity from './identity';
+import { GenericFunction } from '../types';
 
 export type Cache = Map<any, any> | WeakMap<any, any>;
 
@@ -13,9 +14,9 @@ export type MemoizeProps<U, V> = {
  * @since 0.1.0
  */
 export default function memoize<
-	T extends Function,
+	T extends GenericFunction,
 	U extends Function = typeof identity,
-	V extends Cache = Map<any, any>
+	V extends Cache = Map<any, ReturnType<T>>
 >(fn: T, resolver = <U>(identity as unknown), cache = <V>new Map()): T & MemoizeProps<U, V> {
 	return <any>defineProperties(
 		(...args: any[]) => {
@@ -24,8 +25,15 @@ export default function memoize<
 			if (cache.has(key)) {
 				value = cache.get(key);
 			} else {
-				value = fn(...args);
+				try {
+					value = fn(...args);
+				} catch (err) {
+					value = err;
+				}
 				cache.set(key, value);
+			}
+			if (value instanceof Error) {
+				throw value;
 			}
 			return value;
 		},

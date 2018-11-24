@@ -2,13 +2,14 @@ module.exports = {
 	automock: false,
 	testEnvironment: 'node',
 	coverageReporters: ['html', 'json', 'lcov', 'text', 'text-summary'],
+	collectCoverageFrom: ['packages/*/src/**/*.{j,t}s'],
 	coveragePathIgnorePatterns: ['/dist/', '/node_modules/', '/test/', '/test-package/'],
 	coverageThreshold: {
 		global: {
-			branches: 80,
-			functions: 80,
-			lines: 80,
-			statements: 80
+			branches: 73,
+			functions: 76,
+			lines: 71,
+			statements: 71
 		}
 	},
 	roots: ['<rootDir>/packages'],

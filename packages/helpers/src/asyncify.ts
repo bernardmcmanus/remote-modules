@@ -1,4 +1,5 @@
 import last from './last';
+import { GenericFunction } from '../types';
 
 /**
  * Wraps a function with signature (...args, callback)
@@ -19,8 +20,11 @@ import last from './last';
  *  return result;
  * }));
  */
-export default function asyncify(fn: (...args: any[]) => any, context?: any) {
-	return async (...args: any[]) => {
+export default function asyncify<T extends GenericFunction>(
+	fn: T,
+	context?: any
+): T & GenericFunction<any, Promise<ReturnType<T>>> {
+	return <any>(async (...args: any[]) => {
 		const cb = last(args);
 		const other = args.slice(0, -1);
 		try {
@@ -29,5 +33,5 @@ export default function asyncify(fn: (...args: any[]) => any, context?: any) {
 		} catch (err) {
 			return cb(err);
 		}
-	};
+	});
 }

@@ -1,4 +1,9 @@
 import defineProperties from './defineProperties';
+import { GenericFunction } from '../types';
+
+export type OnceProps = {
+	clear: () => void;
+};
 
 /**
  * Creates a function that caches the first value returned by fn
@@ -14,23 +19,31 @@ import defineProperties from './defineProperties';
  *
  * cachedFunc(); // => 2
  */
-export default function once(fn: (...args: any[]) => any) {
-	let called: boolean = false;
-	let result: any;
+export default function once<T extends GenericFunction>(fn: T): T & OnceProps {
+	let called = false;
+	let result: ReturnType<T> | undefined;
 
-	const clear = () => {
-		called = false;
-		result = undefined;
-	};
-
-	return defineProperties(
+	return <any>defineProperties(
 		(...args: any[]) => {
 			if (!called) {
 				called = true;
-				result = fn(...args);
+				try {
+					result = fn(...args);
+				} catch (err) {
+					result = err;
+				}
+			}
+			if (<unknown>result instanceof Error) {
+				throw result;
 			}
 			return result;
 		},
-		{ clear: { get: () => clear } }
+		{
+			clear: () => {
+				called = false;
+				result = undefined;
+			}
+		},
+		{ writable: false }
 	);
 }

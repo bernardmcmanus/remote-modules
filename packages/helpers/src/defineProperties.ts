@@ -9,22 +9,24 @@ const DESCRIPTOR_KEYS = Object.freeze([
 	'writable'
 ]);
 
-export interface BaseDescriptor {
+export type BaseDescriptor = {
 	configurable?: boolean;
 	enumerable?: boolean;
 	writable?: boolean;
-}
+};
 
-export interface StaticDescriptor extends BaseDescriptor {
+export type ShorthandDescriptorPartial = ObjectMap<any>;
+
+export type StaticDescriptorPartial = {
 	value: any;
-}
+};
 
-export interface DynamicDescriptor extends BaseDescriptor {
+export type DynamicDescriptorPartial = {
 	get: () => any;
 	set?: () => any;
-}
+};
 
-export type Descriptor = StaticDescriptor | DynamicDescriptor;
+export type Descriptor = (StaticDescriptorPartial | DynamicDescriptorPartial) & BaseDescriptor;
 
 /**
  * Convenience wrapper around [Object.defineProperties]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties}
@@ -42,28 +44,27 @@ export type Descriptor = StaticDescriptor | DynamicDescriptor;
  * 	{ configurable: false }
  * );
  */
-export default function defineProperties<T>(
-	target: T,
-	props: ObjectMap<any>,
-	descriptorDefaults = {}
-) {
+export default function defineProperties<
+	T,
+	U extends ShorthandDescriptorPartial | StaticDescriptorPartial | DynamicDescriptorPartial
+>(target: T, props: U, descriptorDefaults = {}): T & U {
 	const defaultDescriptor: BaseDescriptor = { enumerable: false, ...descriptorDefaults };
 	Object.defineProperties(
 		target,
 		[...Object.keys(props), ...Object.getOwnPropertySymbols(props)].reduce(
 			(acc: ObjectMap<Descriptor>, key) => {
-				// @ts-ignore: TypeScript doesn't support symbol as an index type (https://git.io/fxhc9)
-				const value = props[key];
+				// TypeScript doesn't support symbol as an index type (https://git.io/fxhc9)
+				const value = (props as ObjectMap<any>)[key as string];
 				const isPartial =
 					value &&
 					typeof value === 'object' &&
 					DESCRIPTOR_KEYS.some(k => Object.hasOwnProperty.call(value, k));
-				// @ts-ignore: TypeScript doesn't support symbol as an index type (https://git.io/fxhc9)
-				acc[key] = { ...defaultDescriptor, ...(isPartial ? value : { value }) };
+				// TypeScript doesn't support symbol as an index type (https://git.io/fxhc9)
+				acc[key as string] = { ...defaultDescriptor, ...(isPartial ? value : { value }) };
 				return acc;
 			},
 			{}
 		)
 	);
-	return target;
+	return <any>target;
 }

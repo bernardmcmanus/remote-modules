@@ -1,15 +1,16 @@
 import fs, { Stats } from 'fs';
 import Path from 'path';
 
-import resolve from 'resolve';
+import resolve, { AsyncOpts } from 'resolve';
 import merge from 'deepmerge';
 import { asyncify, promisify, defineProperties, get, pickBy } from '@remote-modules/helpers';
-import { ObjectMap } from '@remote-modules/helpers/dist/types';
+import { ObjectMap, NodeCallback } from '@remote-modules/helpers/dist/types';
 
-const resolveAsync = promisify(resolve);
-const statAsync = promisify(fs.stat, fs);
-
-type NodeCallback = (err: Error | null, result: any) => any;
+const resolveAsync = (<unknown>promisify(resolve)) as (
+	request: string,
+	opts?: AsyncOpts
+) => Promise<string>;
+const statAsync = (<unknown>promisify(fs.stat, fs)) as (path: string) => Promise<Stats>;
 
 export interface ResolverOptions {
 	rootDir: string;
@@ -83,7 +84,7 @@ export default class Resolver {
 	isFileAsync = asyncify(async (file: string) => {
 		let result;
 		try {
-			const stat = (await statAsync(file)) as Stats;
+			const stat = await statAsync(file);
 			result = stat.isFile();
 		} catch (err) {
 			if (err.code !== 'ENOENT') {
