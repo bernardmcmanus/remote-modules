@@ -1,4 +1,10 @@
 import identity from './identity';
+import { GenericFunction, ObjectMap } from '../types';
+
+export type Options = {
+	defaults?: ObjectMap<any>;
+	xargs?: GenericFunction;
+};
 
 /**
  * Wraps a function that accepts a callback with signature (err, result)
@@ -18,17 +24,17 @@ import identity from './identity';
  * 	xargs: ([result]) => [null, result]
  * });
  */
-export default function promisify(
-	fn: (...args: any[]) => any,
+export default function promisify<T extends GenericFunction, U extends Options>(
+	fn: T,
 	context?: any,
-	{ defaults = {}, xargs = identity } = {}
-) {
-	return (...inputArgs: any[]) =>
+	{ defaults = {}, xargs = identity }: U = <U>{}
+): T & GenericFunction<any, Promise<ReturnType<T>>> {
+	return <any>((...inputArgs: any[]) =>
 		new Promise((resolve, reject) => {
 			const argsWithDefaults = Object.assign([], defaults, inputArgs);
 			fn.call(context, ...argsWithDefaults, (...args: any[]) => {
 				const [err, result] = xargs(args);
 				return err ? reject(err) : resolve(result);
 			});
-		});
+		}));
 }

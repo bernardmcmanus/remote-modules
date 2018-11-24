@@ -1,10 +1,11 @@
 import identity from './identity';
 import noop from './noop';
+import { GenericFunction } from '../types';
 
-export type deferred = {
+export type Deferred<T extends GenericFunction> = {
 	resolve: (value?: any) => void;
 	reject: (reason?: Error) => void;
-	promise: Promise<any>;
+	promise: Promise<ReturnType<T>>;
 };
 
 /**
@@ -12,7 +13,10 @@ export type deferred = {
  * @see [Deferred | MDN]{@link https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm/Deferred}
  * @since 0.1.0
  */
-export default function Deferred(onResolved = identity, onRejected?: () => any): deferred {
+export default function Deferred<T extends GenericFunction = typeof identity>(
+	onResolved: T = <T>identity,
+	onRejected?: (err?: Error) => any
+): Deferred<T> {
 	let resolve = noop;
 	let reject = noop;
 	const promise = new Promise((...args) => {

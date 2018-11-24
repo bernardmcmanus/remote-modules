@@ -65,7 +65,9 @@
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-typescript": "^7.1.0",
     "@babel/register": "^7.0.0",
+    "@types/jest": "^23.3.9",
     "@types/node": "^10.12.2",
+    "@types/sinon": "^5.0.7",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
     "babel-jest": "^23.6.0",
@@ -86,6 +88,6 @@
     "rimraf": "^2.6.2",
     "sinon": "^7.1.1",
     "typescript": "^3.1.6",
-    "typescript-eslint-parser": "^20.1.1"
+    "typescript-eslint-parser": "^21.0.1"
   }
 }
