@@ -1,3 +1,4 @@
+.remote/
 coverage/
 dist/
 packages/test-package/

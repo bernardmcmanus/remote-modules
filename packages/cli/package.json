@@ -37,7 +37,7 @@
   "scripts": {
     "babel": "babel --config-file ../../babel.config.js --extensions .js,.ts --copy-files --source-maps inline",
     "build": "NODE_ENV=${NODE_ENV:-production} npm run babel -- src --out-dir dist",
-    "clean": "rimraf coverage dist",
+    "clean": "rimraf dist",
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
     "validate:ts": "tsc --pretty --noEmit"
