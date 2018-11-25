@@ -52,6 +52,22 @@ export default class Resolver {
 		});
 	}
 
+	get extensions() {
+		return this.options.extensions as string[];
+	}
+
+	get mainFields() {
+		return this.options.mainFields as string[];
+	}
+
+	get moduleDirs() {
+		return this.options.moduleDirs as string[];
+	}
+
+	get rootDir() {
+		return this.options.rootDir;
+	}
+
 	wrapFsCheck<T extends Function = (value: string) => boolean>(fn: T): T {
 		return <any>((value: string) => this.checkConstrained(value) && fn(value));
 	}
@@ -97,7 +113,7 @@ export default class Resolver {
 
 	packageFilter = (pkg: ObjectMap<string>) => {
 		let result = pkg;
-		for (const field of this.options.mainFields as string[]) {
+		for (const field of this.mainFields) {
 			if (field && pkg[field]) {
 				let main = pkg[field];
 				if (pkg.main && typeof main === 'object') {
@@ -120,7 +136,7 @@ export default class Resolver {
 	};
 
 	checkConstrained(file: string) {
-		return file.startsWith(this.options.rootDir);
+		return file.startsWith(this.rootDir);
 	}
 
 	isCore(request: string) {
